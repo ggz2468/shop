@@ -14,52 +14,38 @@
 8. Docker Compose v5.1.2
 
 ### 安裝步驟
-1. 下載此專案程式，並切換至專案目錄內
+1. 下載專案與進入目錄
 ```bash
 git clone git@github.com:ggz2468/shop.git
 cd shop
 ```
-2. 安裝此專案所需的套件
+2. 安裝後端與前端套件
 ```bash
 composer install
 npm install
 ```
-3. 將 .env.example 複製為 .env
+3. 設定環境變數
 ```bash
 cp .env.example .env
 ```
-4. 填入所需屬性值至 .env
+4. 啟動開發環境
+```bash
+docker-compose up -d nginx mysql redis workspace
 ```
-# 專案名稱
-APP_NAME=自製電子商務網站
-
-# 網站網址
-APP_URL=
-
-# 資料庫設定值
-DB_CONNECTION=mysql
-DB_HOST=
-DB_PORT=
-DB_DATABASE=
-DB_USERNAME=
-DB_PASSWORD=
-
-# Redis 設定值
-REDIS_CLIENT=
-REDIS_HOST=
-REDIS_PASSWORD=
-REDIS_PORT=
-```
-5. 產生應用程式密鑰
-```
+5. 初始化應用程式
+```bash
+docker-compose exec workspace bash
 php artisan key:generate
-```
-6. 進行資料庫遷移，並寫入測試資料
-```
 php artisan migrate --seed
 ```
-7. 啟動伺服器
-```
-php artisan serve
-```
-8. 開啟瀏覽器並前往: <a href="http://127.0.0.1:8000" target="_blank">http://127.0.0.1:8000</a>
+6. 編譯前端資源
+    - 開發模式
+    ```bash
+    npm run dev
+    ```
+    - 正式模式
+    ```bash
+    npm run build
+    ```
+7. 開啟網頁
+前往: <a href="http://127.0.0.1" target="_blank">http://127.0.0.1</a>
