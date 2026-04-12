@@ -27,7 +27,7 @@ class ProductSeeder extends Seeder
 
         $products->each(function (Product $product) {
             Image::factory()->create([
-                'url' => $product->name . '.gif',
+                'url' => '/public/images/products/' . $product->name . '.gif',
                 'imageable_id' => $product->id,
                 'imageable_type' => Product::class
             ]);
