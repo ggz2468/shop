@@ -16,8 +16,8 @@
 ### 安裝步驟
 1. 下載專案與進入目錄
 ```bash
-git clone git@github.com:ggz2468/shop.git
-cd shop
+git clone git@github.com:ggz2468/shop-api.git
+cd shop-api
 ```
 2. 安裝必要套件
 ```bash
