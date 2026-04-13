@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name', 50)->comment('名稱');
             $table->unsignedMediumInteger('price')->comment('價格');
             $table->text('description')->comment('描述');
+            $table->unsignedInteger('view_count')->default(0)->comment('被瀏覽次數');
             $table->timestamp('created_at')->nullable()->useCurrent();
             $table->timestamp('updated_at')->nullable()->useCurrent()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();
