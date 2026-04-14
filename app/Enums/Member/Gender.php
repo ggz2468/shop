@@ -2,26 +2,20 @@
 
 namespace App\Enums\Member;
 
-class Gender
+enum Gender: int
 {
     /**
      * 男性
-     * 
-     * @var int
      */
-    public const Male = 1;
+    case Male = 1;
 
     /**
      * 女性
-     * 
-     * @var int
      */
-    public const Female = 2;
+    case Female = 2;
 
     /**
      * 其他
-     * 
-     * @var int
      */
-    public const Other = 3;
+    case Other = 3;
 }
