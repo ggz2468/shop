@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 class ProductRepository extends Repository
 {
     /**
-     * 依據建立時間由新到舊取得所有產品
+     * 取得所有產品
      * 
      * @return array<int, array<string, mixed>>
      */
@@ -39,6 +39,7 @@ class ProductRepository extends Repository
                     'name' => $product->name,
                     'price' => $product->price,
                     'description' => $product->description,
+                    'view_count' => $product->view_count,
                     'image_path' => $product->images->first()?->url,
                 ];
                 $cacheKey = "product:$productId";

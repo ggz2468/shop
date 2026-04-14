@@ -20,13 +20,13 @@ class ProductController extends Controller
     }
 
     /**
-     * 取得產品
+     * 取得熱門產品
      * 
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function getPopularProducts()
     {
-        $products = $this->productService->getAllProducts();
+        $products = $this->productService->getPopularProducts();
         return response()->json($products);
     }
 }
