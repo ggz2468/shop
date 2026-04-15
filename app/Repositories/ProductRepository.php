@@ -40,7 +40,7 @@ class ProductRepository extends Repository
                     'price' => $product->price,
                     'description' => $product->description,
                     'view_count' => $product->view_count,
-                    'image_path' => $product->images->first()?->url,
+                    'image_path' => $product->images->first()?->url ?? '/storage/images/products/default.png',
                 ];
                 $cacheKey = "product:$productId";
                 Cache::put($cacheKey, $product, 3600);
