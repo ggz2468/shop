@@ -20,7 +20,7 @@ class ProductResource extends JsonResource
             'name' => $this['name'],
             'price' => $this['price'],
             'description' => $this['description'],
-            'view_count' => $this['view_count'],
+            'view_counts' => $this['view_counts'],
             'image_path' => $this['image_path'],
         ];
     }

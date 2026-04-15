@@ -39,7 +39,7 @@ class ProductRepository extends Repository
                     'name' => $product->name,
                     'price' => $product->price,
                     'description' => $product->description,
-                    'view_count' => $product->view_count,
+                    'view_counts' => $product->view_counts,
                     'image_path' => $product->images->first()?->url ?? '/storage/images/products/default.png',
                 ];
                 $cacheKey = "product:$productId";
