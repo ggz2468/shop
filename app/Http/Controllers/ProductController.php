@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\ProductService;
 use App\Http\Resources\ProductResource;
+use App\Models\Product;
 
 class ProductController extends Controller
 {
@@ -22,6 +23,8 @@ class ProductController extends Controller
 
     /**
      * 取得首頁所需的熱門商品列表
+     * 
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index()
     {
@@ -38,11 +41,15 @@ class ProductController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * 取得單一產品資料
+     * 
+     * @param \App\Models\Product $product
+     * @return \App\Http\Resources\ProductResource
      */
-    public function show(string $id)
+    public function show(Product $product)
     {
-        //
+        $productData = $this->productService->getProductData($product);
+        return new ProductResource($productData);
     }
 
     /**
