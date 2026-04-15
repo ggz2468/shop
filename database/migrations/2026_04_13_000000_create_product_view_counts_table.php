@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_click_logs', function (Blueprint $table) {
+        Schema::create('product_view_counts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products');
-            $table->unsignedInteger('view_count')->default(0)->comment('被瀏覽次數');
+            $table->unsignedInteger('view_counts')->default(0)->comment('被瀏覽次數');
             $table->timestamp('recorded_at')->comment('紀錄時間');
         });
     }
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_click_logs');
+        Schema::dropIfExists('product_view_counts');
     }
 };
