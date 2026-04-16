@@ -19,11 +19,13 @@ class Product extends Model
         'name',
         'price',
         'description',
+        'view_counts',
     ];
 
     protected $casts = [
         'product_spec_id' => 'integer',
         'price' => 'integer',
+        'view_counts' => 'integer',
     ];
 
     public function productSpec(): BelongsTo
@@ -39,5 +41,10 @@ class Product extends Model
     public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');
+    }
+
+    public function productViewCounts(): HasMany
+    {
+        return $this->hasMany(ProductViewCount::class);
     }
 }
