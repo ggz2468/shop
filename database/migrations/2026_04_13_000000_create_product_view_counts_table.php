@@ -27,22 +27,18 @@ return new class extends Migration
 
         $thisMonthStart = new DateTimeImmutable('first day of this month 00:00:00');
         $nextMonthStart = $thisMonthStart->modify('+1 month');
-        $nextNextMonthStart = $thisMonthStart->modify('+2 months');
 
         $historyUpperBound = $thisMonthStart->format('Y-m-d H:i:s');
         $currentUpperBound = $nextMonthStart->format('Y-m-d H:i:s');
-        $nextUpperBound = $nextNextMonthStart->format('Y-m-d H:i:s');
 
         $historyPartition = 'p_history';
-        $currentPartition = 'p' . $nextMonthStart->format('Ym');
-        $nextPartition = 'p' . $nextNextMonthStart->format('Ym');
+        $currentPartition = 'p' . $thisMonthStart->format('Ym');
 
         $sqlStatement = <<< SQL_STATEMENT
         ALTER TABLE product_view_counts
         PARTITION BY RANGE COLUMNS(recorded_at) (
             PARTITION {$historyPartition} VALUES LESS THAN ('{$historyUpperBound}'),
             PARTITION {$currentPartition} VALUES LESS THAN ('{$currentUpperBound}'),
-            PARTITION {$nextPartition} VALUES LESS THAN ('{$nextUpperBound}'),
             PARTITION pmax VALUES LESS THAN (MAXVALUE)
         )
         SQL_STATEMENT;
