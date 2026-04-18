@@ -79,16 +79,36 @@ abstract class Repository
      * 取得條件篩選後的資料
      * 
      * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, string> $relations
      * @param array<int, string> $orderBy
      * @param int $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function get(array $conditions, array $orderBy = ['id', 'asc'], int $limit = 100)
+    public function get(array $conditions, array $relations = [], array $orderBy = ['id', 'asc'], int $limit = 100)
     {
         return $this->filter($conditions)
+            ->with($relations)
             ->orderBy(...$orderBy)
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * 取得經條件篩選後，指定頁碼內的資料
+     * 
+     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, string> $relations
+     * @param array<int, string> $orderBy
+     * @param int $perPage
+     * @param int $page
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function paginate(array $conditions, array $relations = [], array $orderBy = ['id', 'asc'], int $perPage = 10, int $page = 1)
+    {
+        return $this->filter($conditions)
+            ->with($relations)
+            ->orderBy(...$orderBy)
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 
     /**
