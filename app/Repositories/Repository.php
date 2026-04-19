@@ -80,17 +80,19 @@ abstract class Repository
      * 
      * @param array<int, array<int, mixed>> $conditions
      * @param array<int, string> $relations
-     * @param array<int, string> $orderBy
+     * @param array<int, string>|array<int, array<int, string>> $orderBy
      * @param int $limit
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function get(array $conditions, array $relations = [], array $orderBy = ['id', 'asc'], int $limit = 100)
+    public function get(array $conditions, array $relations = [], array $orderBy = [], int $limit = 100)
     {
-        return $this->filter($conditions)
-            ->with($relations)
-            ->orderBy(...$orderBy)
-            ->limit($limit)
-            ->get();
+        $query = $this->filter($conditions)->with($relations);
+
+        foreach ($this->normalizeOrderBy($orderBy) as $order) {
+            $query = $query->orderBy(...$order);
+        }
+        
+        return $query->limit($limit)->get();
     }
 
     /**
@@ -98,17 +100,20 @@ abstract class Repository
      * 
      * @param array<int, array<int, mixed>> $conditions
      * @param array<int, string> $relations
-     * @param array<int, string> $orderBy
+     * @param array<int, string>|array<int, array<int, string>> $orderBy
      * @param int $rowCountsPerPage
      * @param int $page
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function paginate(array $conditions, array $relations = [], array $orderBy = ['id', 'asc'], int $rowCountsPerPage = 10, int $page = 1)
+    public function paginate(array $conditions, array $relations = [], array $orderBy = [], int $rowCountsPerPage = 10, int $page = 1)
     {
-        return $this->filter($conditions)
-            ->with($relations)
-            ->orderBy(...$orderBy)
-            ->paginate($rowCountsPerPage, ['*'], 'page', $page);
+        $query = $this->filter($conditions)->with($relations);
+
+        foreach ($this->normalizeOrderBy($orderBy) as $order) {
+            $query = $query->orderBy(...$order);
+        }
+
+        return $query->paginate($rowCountsPerPage, ['*'], 'page', $page);
     }
 
     /**
@@ -180,5 +185,43 @@ abstract class Repository
         }
 
         return $query;
+    }
+
+    /**
+     * 正規化排序條件格式
+     *
+     * 支援以下格式：
+     * - ['id', 'asc']
+     * - [['view_counts', 'desc'], ['id', 'asc']]
+     *
+     * @param array<int, string>|array<int, array<int, string>> $orderBy
+     * @return array<int, array{0: string, 1: string}>
+     */
+    private function normalizeOrderBy(array $orderBy): array
+    {
+        if ($orderBy === []) {
+            return [];
+        }
+
+        if (isset($orderBy[0]) && is_string($orderBy[0])) {
+            $column = (string) ($orderBy[0] ?? 'id');
+            $direction = strtolower((string) ($orderBy[1] ?? 'asc'));
+
+            return [[$column, $direction === 'desc' ? 'desc' : 'asc']];
+        }
+
+        $normalized = [];
+
+        foreach ($orderBy as $order) {
+            if (!is_array($order) || !isset($order[0]) || !is_string($order[0])) {
+                continue;
+            }
+
+            $column = $order[0];
+            $direction = strtolower((string) ($order[1] ?? 'asc'));
+            $normalized[] = [$column, $direction === 'desc' ? 'desc' : 'asc'];
+        }
+
+        return $normalized;
     }
 }
