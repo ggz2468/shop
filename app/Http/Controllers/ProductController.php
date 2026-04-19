@@ -40,7 +40,6 @@ class ProductController extends Controller
             $validated['row_counts_per_page'] ?? ProductRepository::DEFAULT_ROW_COUNTS_PER_PAGE,
             $validated['page'] ?? ProductRepository::DEFAULT_PAGE,
         ];
-
         $products = $this->productService->getPopularProducts(...$parameters);
         return ProductResource::collection($products);
     }
