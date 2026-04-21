@@ -18,6 +18,7 @@ return new class extends Migration
             $table->char('national_id_number', 10)->unique()->comment('身分證字號');
             $table->string('email', 100)->unique()->comment('電子郵件');
             $table->string('phone', 20)->unique()->comment('手機號碼');
+            $table->string('password', 255)->comment('密碼');
             $table->date('birth_date')->comment('生日');
             $table->text('address')->comment('住址');
             $table->tinyInteger('gender')->comment('性別');
