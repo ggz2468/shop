@@ -34,6 +34,7 @@ docker compose up -d nginx mysql redis workspace
 5. 初始化應用程式
 ```bash
 docker compose exec --user=laradock workspace bash
+cd shop-api
 php artisan key:generate
 php artisan migrate --seed
 ```
