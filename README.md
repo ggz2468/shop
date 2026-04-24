@@ -14,7 +14,7 @@
 8. Docker Compose 5.1.2
 
 ### 安裝步驟
-1. 下載專案與進入目錄
+1. 下載專案並切換至專案目錄
 ```bash
 git clone git@github.com:ggz2468/shop-api.git
 cd shop-api
@@ -31,15 +31,21 @@ cp .env.example .env
 ```bash
 docker compose up -d nginx mysql redis workspace
 ```
-5. 初始化應用程式
+5. 進入 Workspace 容器內
 ```bash
 docker compose exec --user=laradock workspace bash
+```
+6. 切換至專案目錄
+```bash
 cd shop-api
+```
+7. 初始化應用程式
+```bash
 php artisan key:generate
 php artisan migrate --seed
 ```
-6. 新增次月的 Partition 分區
+8. 新增次月的 Partition 分區，並刪除過舊的 Partition 分區
 ```bash
 php artisan app:maintain-product-view-counts-partitions
 ```
-7. API 入口網址: http://127.0.0.1/api
+9. API 入口網址: http://localhost/api
