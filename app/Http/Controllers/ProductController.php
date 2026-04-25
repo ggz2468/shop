@@ -23,7 +23,7 @@ class ProductController extends Controller
     }
 
     /**
-     * 取得首頁所需的熱門商品列表
+     * 取得首頁所需的熱門產品列表
      * 
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
