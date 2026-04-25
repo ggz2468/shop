@@ -26,7 +26,7 @@ class ProductService
      * 
      * @param int $rowCountsPerPage 每頁資料筆數
      * @param int $page 頁碼
-     * @return array<int, array<string, mixed>>
+     * @return array<string, array<int, array<string, mixed>>|int>
      */
     public function getPopularProducts(int $rowCountsPerPage = ProductRepository::DEFAULT_ROW_COUNTS_PER_PAGE, int $page = ProductRepository::DEFAULT_PAGE)
     {

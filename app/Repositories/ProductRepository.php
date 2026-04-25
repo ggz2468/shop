@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use Illuminate\Support\Facades\Cache;
+use App\Models\Product;
 
 class ProductRepository extends Repository
 {
@@ -39,14 +40,18 @@ class ProductRepository extends Repository
      * 
      * @param int $rowCountsPerPage 每頁資料筆數
      * @param int $page 頁碼
-     * @return array<int, array<string, mixed>>
+     * @return array<string, array<int, array<string, mixed>>|int>
      */
     public function getProducts(int $rowCountsPerPage = self::DEFAULT_ROW_COUNTS_PER_PAGE, int $page = self::DEFAULT_PAGE)
     {
+        // 定義資料總筆數
+        $totalRowCounts = Product::count();
+
         // 取得產品編號
         $productIdsCacheKey = "product_ids:page:{$page}:row_counts_per_page:{$rowCountsPerPage}";
         $productIds = Cache::tags(['products_index'])->remember($productIdsCacheKey, 3600, function () use ($rowCountsPerPage, $page) {
-            return collect($this->paginate([], ['images'], [[self::DEFAULT_SORT_FIELD, self::DEFAULT_SORT_DIRECTION], ['id', 'asc']], $rowCountsPerPage, $page)->items())
+            $paginator = $this->paginate([], ['images'], [[self::DEFAULT_SORT_FIELD, self::DEFAULT_SORT_DIRECTION], ['id', 'asc']], $rowCountsPerPage, $page);
+            return collect($paginator->items())
                 ->pluck('id')
                 ->all();
         });
@@ -94,6 +99,9 @@ class ProductRepository extends Repository
             ->values()
             ->all();
 
-        return $products;
+        return [
+            'products' => $products,
+            'total_row_counts' => $totalRowCounts
+        ];
     }
 }

@@ -7,6 +7,7 @@ use App\Services\ProductService;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Repositories\ProductRepository;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductController extends Controller
 {
@@ -23,7 +24,7 @@ class ProductController extends Controller
     }
 
     /**
-     * 取得首頁所需的熱門產品列表
+     * 取得熱門產品列表
      * 
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
@@ -40,8 +41,12 @@ class ProductController extends Controller
             $validated['row_counts_per_page'] ?? ProductRepository::DEFAULT_ROW_COUNTS_PER_PAGE,
             $validated['page'] ?? ProductRepository::DEFAULT_PAGE,
         ];
-        $products = $this->productService->getPopularProducts(...$parameters);
-        return ProductResource::collection($products);
+        $data = $this->productService->getPopularProducts(...$parameters);
+
+        // 定義包含頁碼資訊的分頁物件
+        $paginator = new LengthAwarePaginator($data['products'], $data['total_row_counts'], $parameters[0], $parameters[1]);
+
+        return ProductResource::collection($paginator);
     }
 
     /**
