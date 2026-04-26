@@ -27,25 +27,29 @@ composer install
 ```bash
 cp .env.example .env
 ```
-4. 啟動開發環境
+4. 切換至 laradock/ 目錄
+```bash
+cd ../laradock
+```
+5. 啟動開發環境
 ```bash
 docker compose up -d nginx mysql redis workspace
 ```
-5. 進入 Workspace 容器內
+6. 進入 Workspace 容器內
 ```bash
 docker compose exec --user=laradock workspace bash
 ```
-6. 切換至專案目錄
+7. 切換至專案目錄
 ```bash
 cd shop-api
 ```
-7. 初始化應用程式
+8. 初始化應用程式
 ```bash
 php artisan key:generate
 php artisan migrate --seed
 ```
-8. 新增次月的 Partition 分區，並刪除過舊的 Partition 分區
+9. 新增次月的 Partition 分區，並刪除過舊的 Partition 分區
 ```bash
 php artisan app:maintain-product-view-counts-partitions
 ```
-9. API 入口網址: http://localhost/api
+10. API 入口網址: http://localhost/api
