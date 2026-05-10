@@ -3,12 +3,25 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\VerificationController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+});
+
+Route::prefix('verifications')->group(function () {
+    Route::post('/phone/send', [VerificationController::class, 'sendSmsVerificationCode'])
+        ->middleware('throttle:verification-phone-send');
+    Route::post('/phone/verify', [VerificationController::class, 'verifyPhone'])
+        ->middleware('throttle:verification-phone-verify');
+
+    Route::post('/email/send', [VerificationController::class, 'sendEmailVerificationLink'])
+        ->middleware('throttle:verification-email-send');
+    Route::post('/email/verify', [VerificationController::class, 'verifyEmail'])
+        ->middleware('throttle:verification-email-verify');
 });
 
 Route::apiResource('/products', ProductController::class);
