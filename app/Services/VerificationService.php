@@ -71,7 +71,7 @@ class VerificationService
 
             // 發送電子郵件驗證連結通知信
             $frontendUrl = rtrim($frontendUrl, '/');
-            $verificationUrl = sprintf("%s/email/verify?token=%s", $frontendUrl, $verificationToken);
+            $verificationUrl = sprintf("%s/verifications/email/verify?token=%s", $frontendUrl, $verificationToken);
             $member->notify(new EmailVerificationLinkNotification($verificationUrl));
         } catch (Throwable $e) {
             // 因發送電子郵件驗證連結通知信失敗，故刪除剛剛建立的 token 快取資料，以避免無效的 token 留在快取中。
