@@ -55,7 +55,7 @@ abstract class Repository
     /**
      * 更新資料
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @param array<string, mixed> $data
      * @return int
      */
@@ -67,7 +67,7 @@ abstract class Repository
     /**
      * 刪除資料
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @return int
      */
     public function delete(array $conditions)
@@ -78,7 +78,7 @@ abstract class Repository
     /**
      * 取得條件篩選後的資料
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @param array<int, string> $relations
      * @param array<int, string>|array<int, array<int, string>> $orderBy
      * @param int $limit
@@ -98,7 +98,7 @@ abstract class Repository
     /**
      * 取得經條件篩選後，指定頁碼內的資料
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @param array<int, string> $relations
      * @param array<int, string>|array<int, array<int, string>> $orderBy
      * @param int $rowCountsPerPage
@@ -119,7 +119,7 @@ abstract class Repository
     /**
      * 取得條件篩選後的第一筆資料
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @return \Illuminate\Database\Eloquent\Model|null
      */
     public function first(array $conditions)
@@ -130,7 +130,7 @@ abstract class Repository
     /**
      * 取得條件篩選後的資料筆數
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @return int
      */
     public function count(array $conditions)
@@ -141,7 +141,7 @@ abstract class Repository
     /**
      * 取得條件篩選後的資料是否存在
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @return bool
      */
     public function exists(array $conditions)
@@ -152,7 +152,7 @@ abstract class Repository
     /**
      * 取得條件篩選後的資料是否不存在
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @return bool
      */
     public function doesNotExist(array $conditions)
@@ -173,18 +173,51 @@ abstract class Repository
     /**
      * 資料條件篩選
      * 
-     * @param array<int, array<int, mixed>> $conditions
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
      * @return \Illuminate\Database\Eloquent\Builder
      */
     private function filter(array $conditions)
     {
         $query = $this->modelClassName::query();
 
-        foreach ($conditions as $condition) {
+        foreach ($this->normalizeConditions($conditions) as $condition) {
             $query = $query->where(...$condition);
         }
 
         return $query;
+    }
+
+    /**
+     * 正規化篩選條件格式
+     *
+     * 支援以下格式：
+     * - ['status', '=', 'active']
+     * - [['status', '=', 'active'], ['id', '>', 10]]
+     *
+     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
+     * @return array<int, array<int, mixed>>
+     */
+    private function normalizeConditions(array $conditions): array
+    {
+        if ($conditions === []) {
+            return [];
+        }
+
+        if (isset($conditions[0]) && !is_array($conditions[0])) {
+            return [$conditions];
+        }
+
+        $normalized = [];
+
+        foreach ($conditions as $condition) {
+            if (!is_array($condition) || $condition === []) {
+                continue;
+            }
+
+            $normalized[] = $condition;
+        }
+
+        return $normalized;
     }
 
     /**
