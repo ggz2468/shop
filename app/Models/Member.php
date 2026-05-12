@@ -26,13 +26,20 @@ class Member extends Authenticatable
     ];
 
     protected $hidden = [
+        'id',
         'national_id_number',
         'email',
         'email_verified_at',
         'phone',
         'phone_verified_at',
         'password',
+        'birth_date',
+        'address',
+        'remember_token',
         'deleted_at',
+        'active_national_id_number',
+        'active_email',
+        'active_phone',
     ];
 
     protected $casts = [
