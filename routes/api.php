@@ -6,9 +6,12 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VerificationController;
 
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware('throttle:auth-login');
+    Route::post('/register', [AuthController::class, 'register'])
+        ->middleware('throttle:auth-register');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle:auth-session'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/user', [AuthController::class, 'user']);
     });
@@ -26,4 +29,5 @@ Route::prefix('verifications')->group(function () {
         ->middleware('throttle:verification-email-verify');
 });
 
-Route::apiResource('/products', ProductController::class);
+Route::apiResource('/products', ProductController::class)
+    ->middleware('throttle:products');
