@@ -19,11 +19,10 @@ class Member extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'first_name',
-        'last_name',
-        'birth_date',
-        'address',
-        'gender',
+        'national_id_number',
+        'email',
+        'phone',
+        'password',
     ];
 
     protected $hidden = [
