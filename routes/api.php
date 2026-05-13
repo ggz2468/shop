@@ -4,12 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\PasswordResetController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:auth-login');
     Route::post('/register', [AuthController::class, 'register'])
         ->middleware('throttle:auth-register');
+    Route::post('/password/forgot', [PasswordResetController::class, 'sendResetLink'])
+        ->middleware('throttle:auth-password-forgot');
 
     Route::middleware(['auth:sanctum', 'throttle:auth-session'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
