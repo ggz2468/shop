@@ -41,6 +41,16 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('auth-password-forgot', function (Request $request): array {
+            $emailKey = (string) ($request->input('email') ?? $request->ip());
+
+            return [
+                Limit::perMinute(1)->by('auth:password:forgot:cooldown:' . $emailKey),
+                Limit::perMinutes(15, 5)->by('auth:password:forgot:burst:' . $emailKey),
+                Limit::perHour(30)->by('auth:password:forgot:ip:' . $request->ip()),
+            ];
+        });
+
         RateLimiter::for('auth-session', function (Request $request): array {
             $memberKey = (string) ($request->user()?->id ?? $request->ip());
 
