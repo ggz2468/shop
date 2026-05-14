@@ -91,4 +91,59 @@ class PasswordResetService
             'message' => '重設密碼連結已發送（如果該電子郵件存在）。'
         ];
     }
+
+    /**
+     * 重設密碼
+     * 
+     * @param string $token
+     * @param string $email
+     * @param string $newPassword
+     * @return array{status: int, message: string}
+     */
+    public function resetPassword(string $token, string $email, string $newPassword)
+    {
+        $tokenHash = hash('sha256', $token);
+        $memberId = Cache::pull("password_reset:token:$tokenHash");
+        if (!is_numeric($memberId)) {
+            return [
+                'status' => 400,
+                'message' => '重設密碼失敗，請確認輸入的資訊是否正確。'
+            ];
+        }
+
+        $memberId = (int) $memberId;
+        $cacheKey = "password_reset:member:$memberId";
+
+        // 透過 token 對應的會員編號取得會員資料，並確認 email 一致，避免 token 被跨帳號誤用。
+        $member = $this->memberRepository->first(['id', $memberId]);
+        if ($member === null || !hash_equals(strtolower((string) $member->email), strtolower($email))) {
+            Cache::delete($cacheKey);
+
+            return [
+                'status' => 400,
+                'message' => '重設密碼失敗，請確認輸入的資訊是否正確。'
+            ];
+        }
+
+        // 更新會員密碼。
+        try {
+            $this->memberRepository->updateByEloquentModel($member, [
+                'password' => $newPassword
+            ]);
+        } catch (Throwable $e) {
+            Log::error('會員密碼重設失敗', ['member_id' => $member->id, 'exception' => $e]);
+            return [
+                'status' => 500,
+                'message' => '重設密碼失敗，請稍後再試。'
+            ];
+        }
+
+        // 刪除快取中的 token 資料，確保重設密碼連結只能使用一次。
+        Cache::delete($cacheKey);
+
+        return [
+            'status' => 200,
+            'message' => '密碼已成功重設。'
+        ];
+    }
 }

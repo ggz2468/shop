@@ -13,6 +13,8 @@ Route::prefix('auth')->group(function () {
         ->middleware('throttle:auth-register');
     Route::post('/password/forgot', [PasswordResetController::class, 'sendResetLink'])
         ->middleware('throttle:auth-password-forgot');
+    Route::post('/password/reset', [PasswordResetController::class, 'resetPassword'])
+        ->middleware('throttle:auth-password-reset');
 
     Route::middleware(['auth:sanctum', 'throttle:auth-session'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
