@@ -33,7 +33,7 @@ cd ../laradock
 ```
 5. 啟動開發環境
 ```bash
-docker compose up -d nginx mysql redis workspace
+docker compose up -d nginx mysql redis workspace php-worker
 ```
 6. 進入 Workspace 容器內
 ```bash
