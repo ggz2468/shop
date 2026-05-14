@@ -103,16 +103,7 @@ class VerificationService
     public function verifyEmail(string $token)
     {
         $hashedTokenCacheKey = 'email_verify:token:' . hash('sha256', $token);
-        $legacyTokenCacheKey = "email_verify:token:$token";
-
         $data = Cache::pull($hashedTokenCacheKey);
-        $tokenCacheKey = $hashedTokenCacheKey;
-
-        // 向下相容：若舊資料仍以明文 token 當 key，仍可驗證。
-        if ($data === null) {
-            $data = Cache::pull($legacyTokenCacheKey);
-            $tokenCacheKey = $legacyTokenCacheKey;
-        }
 
         if ($data === null) {
             return [
@@ -142,7 +133,7 @@ class VerificationService
 
         // 確認資料庫中是否存在對應會員資料，若不存在則直接刪除 token 快取並回傳驗證失敗。
         if ($member === null) {
-            Cache::deleteMultiple([$tokenCacheKey, "email_verify:member:$memberId"]);
+            Cache::delete("email_verify:member:$memberId");
 
             return [
                 'status' => 500,
@@ -152,7 +143,7 @@ class VerificationService
 
         // 確認會員是否已完成驗證，若已驗證則直接刪除 token 快取並回傳驗證成功。
         if ($member->email_verified_at !== null) {
-            Cache::deleteMultiple([$tokenCacheKey, "email_verify:member:$memberId"]);
+            Cache::delete("email_verify:member:$memberId");
 
             return [
                 'status' => 200,
@@ -174,7 +165,7 @@ class VerificationService
         }
 
         // 刪除 token 與 member 索引 key。
-        Cache::deleteMultiple([$tokenCacheKey, "email_verify:member:$memberId"]);
+        Cache::delete("email_verify:member:$memberId");
 
         return [
             'status' => 200,
