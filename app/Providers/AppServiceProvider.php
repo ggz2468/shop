@@ -51,6 +51,17 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('auth-password-reset', function (Request $request): array {
+            $emailKey = strtolower(trim((string) ($request->input('email') ?? '')));
+            $tokenFingerprint = hash('sha256', (string) ($request->input('token') ?? ''));
+
+            return [
+                Limit::perMinute(5)->by('auth:password:reset:minute:ip:' . $request->ip()),
+                Limit::perMinutes(15, 10)->by('auth:password:reset:email:' . ($emailKey !== '' ? $emailKey : $request->ip())),
+                Limit::perHour(20)->by('auth:password:reset:token:' . $tokenFingerprint),
+            ];
+        });
+
         RateLimiter::for('auth-session', function (Request $request): array {
             $memberKey = (string) ($request->user()?->id ?? $request->ip());
 
