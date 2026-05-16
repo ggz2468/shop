@@ -3,8 +3,9 @@
 namespace App\Services;
 
 use App\Repositories\MemberRepository;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Psr\Log\LoggerInterface;
 use App\Notifications\EmailVerificationLinkNotification;
 use RuntimeException;
 use Throwable;
@@ -15,10 +16,16 @@ class VerificationService
      * 建構子
      * 
      * @param \App\Repositories\MemberRepository $memberRepository
+     * @param \Illuminate\Contracts\Cache\Repository $cache
+     * @param \Illuminate\Contracts\Config\Repository $config
+     * @param \Psr\Log\LoggerInterface $logger
      * @return void
      */
     public function __construct(
-        private MemberRepository $memberRepository
+        private MemberRepository $memberRepository,
+        private CacheRepository $cache,
+        private ConfigRepository $config,
+        private LoggerInterface $logger,
     ) {
         
     }
@@ -36,7 +43,7 @@ class VerificationService
 
         // 檢查對應會員資料是否存在，若不存在則直接回傳發送成功的訊息，以避免洩漏會員資料的存在與否給潛在攻擊者。
         if ($member === null) {
-            Log::warning('嘗試發送電子郵件驗證連結，但找不到對應的會員資料', ['email' => $email]);
+            $this->logger->warning('嘗試發送電子郵件驗證連結，但找不到對應的會員資料', ['email' => $email]);
             return [
                 'status' => 200,
                 'message' => '電子郵件驗證連結發送成功。'
@@ -45,9 +52,9 @@ class VerificationService
 
         // 透過會員編號取得已發送的驗證 token，並刪除舊的 token 快取資料，確保每次發送驗證連結時只有一個有效的 token 留在快取中。
         $cacheKey = "email_verify:member:{$member->id}";
-        $existingTokenHash = Cache::pull($cacheKey);
+        $existingTokenHash = $this->cache->pull($cacheKey);
         if ($existingTokenHash !== null) {
-            Cache::delete("email_verify:token:$existingTokenHash");
+            $this->cache->forget("email_verify:token:$existingTokenHash");
         }
 
         // 重新產生驗證 token
@@ -57,14 +64,13 @@ class VerificationService
         try {
             // 將 token 與會員編號的對應關係快取起來，設定過期時間為 10 分鐘。
             $expiresAt = now()->addMinutes(10);
-            if (!Cache::putMany([
-                "email_verify:token:$verificationTokenHash" => $member->id,
-                $cacheKey => $verificationTokenHash,
-            ], $expiresAt)) {
+            $storedTokenIndex = $this->cache->put("email_verify:token:$verificationTokenHash", $member->id, $expiresAt);
+            $storedMemberIndex = $this->cache->put($cacheKey, $verificationTokenHash, $expiresAt);
+            if (!$storedTokenIndex || !$storedMemberIndex) {
                 throw new RuntimeException('電子郵件驗證 token 儲存失敗。');
             }
 
-            $frontendUrl = config('services.frontend_url');
+            $frontendUrl = $this->config->get('services.frontend_url');
             if (empty($frontendUrl)) {
                 throw new RuntimeException('前端 URL 未設定，請確認服務設定。');
             }
@@ -75,13 +81,11 @@ class VerificationService
             $member->notify(new EmailVerificationLinkNotification($verificationUrl));
         } catch (Throwable $e) {
             // 因發送電子郵件驗證連結通知信失敗，故刪除剛剛建立的 token 快取資料，以避免無效的 token 留在快取中。
-            Cache::deleteMultiple([
-                "email_verify:token:$verificationTokenHash",
-                $cacheKey,
-            ]);
+            $this->cache->forget("email_verify:token:$verificationTokenHash");
+            $this->cache->forget($cacheKey);
 
             // 捕捉發送通知過程中可能發生的例外，並將錯誤訊息紀錄於 Log 中，最後回傳發送失敗的訊息。
-            Log::error('電子郵件驗證連結發送失敗', ['exception' => $e]);
+            $this->logger->error('電子郵件驗證連結發送失敗', ['exception' => $e]);
             return [
                 'status' => 500,
                 'message' => '電子郵件驗證連結發送失敗，請稍後再試。'
@@ -103,7 +107,7 @@ class VerificationService
     public function verifyEmail(string $token)
     {
         $hashedTokenCacheKey = 'email_verify:token:' . hash('sha256', $token);
-        $data = Cache::pull($hashedTokenCacheKey);
+        $data = $this->cache->pull($hashedTokenCacheKey);
 
         if ($data === null) {
             return [
@@ -133,7 +137,7 @@ class VerificationService
 
         // 確認資料庫中是否存在對應會員資料，若不存在則直接刪除 token 快取並回傳驗證失敗。
         if ($member === null) {
-            Cache::delete("email_verify:member:$memberId");
+            $this->cache->forget("email_verify:member:$memberId");
 
             return [
                 'status' => 500,
@@ -143,7 +147,7 @@ class VerificationService
 
         // 確認會員是否已完成驗證，若已驗證則直接刪除 token 快取並回傳驗證成功。
         if ($member->email_verified_at !== null) {
-            Cache::delete("email_verify:member:$memberId");
+            $this->cache->forget("email_verify:member:$memberId");
 
             return [
                 'status' => 200,
@@ -165,7 +169,7 @@ class VerificationService
         }
 
         // 刪除 token 與 member 索引 key。
-        Cache::delete("email_verify:member:$memberId");
+        $this->cache->forget("email_verify:member:$memberId");
 
         return [
             'status' => 200,
