@@ -155,16 +155,24 @@ class VerificationService
             ];
         }
 
-        // 將會員的電子郵件驗證時間更新為目前時間
-        $affectedRowCounts = $this->memberRepository->update(['id', $memberId], [
-            'email_verified_at' => now(),
-        ]);
+        try {
+            // 將會員的電子郵件驗證時間更新為目前時間
+            $affectedRowCounts = $this->memberRepository->update(['id', $memberId], [
+                'email_verified_at' => now(),
+            ]);
 
-        // 確認是否更新成功
-        if ($affectedRowCounts === 0) {
+            if ($affectedRowCounts === 0) {
+                throw new RuntimeException('電子郵件驗證失敗：驗證狀態未更新');
+            }
+        } catch (Throwable $e) {
+            $this->logger->error('電子郵件驗證失敗：更新驗證狀態時發生例外', [
+                'member_id' => $memberId,
+                'exception' => $e,
+            ]);
+
             return [
                 'status' => 500,
-                'message' => '驗證失敗，無法找到對應的會員資料。'
+                'message' => '驗證失敗，請稍後再試。'
             ];
         }
 
