@@ -18,10 +18,12 @@ class PasswordResetServiceTest extends TestCase
      */
     public function test_send_reset_link_returns_success_when_member_not_found(): void
     {
+        $email = 'member@example.com';
+        
         $memberRepository = $this->createMock(MemberRepository::class);
         $memberRepository->expects($this->once())
             ->method('first')
-            ->with(['email', 'guiguzi19971006@gmail.com'])
+            ->with(['email', $email])
             ->willReturn(null);
 
         $cache = $this->createMock(CacheRepository::class);
@@ -35,7 +37,7 @@ class PasswordResetServiceTest extends TestCase
 
         $passwordResetService = new PasswordResetService($memberRepository, $cache, $config, $logger);
 
-        $result = $passwordResetService->sendResetLink('guiguzi19971006@gmail.com');
+        $result = $passwordResetService->sendResetLink($email);
 
         $this->assertEquals([
             'status' => 200,
