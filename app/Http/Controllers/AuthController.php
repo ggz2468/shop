@@ -79,8 +79,7 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
-        $user = Auth::guard('sanctum')->user();
-        return response()->json($user);
+        return response()->json(Auth::user());
     }
 
     /**
