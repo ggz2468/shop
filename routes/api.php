@@ -36,3 +36,11 @@ Route::prefix('verifications')->group(function () {
 
 Route::apiResource('/products', ProductController::class)
     ->middleware('throttle:products');
+
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'service' => config('app.name'),
+        'timestamp' => now()->toIso8601String(),
+    ]);
+});
