@@ -106,3 +106,26 @@ jobs:
             git fetch origin main
             git checkout main
             git pull --ff-only origin main
+
+      - name: Validate health check URL
+        run: |
+          if [ -z "${{ secrets.APP_HEALTHCHECK_URL }}" ]; then
+            echo "::error::APP_HEALTHCHECK_URL is not set."
+            exit 1
+          fi
+
+      - name: Health check after deploy
+        run: |
+          for i in {1..10}; do
+            status_code=$(curl -sS -o /dev/null -w "%{http_code}" "${{ secrets.APP_HEALTHCHECK_URL }}")
+            if [ "$status_code" -ge 200 ] && [ "$status_code" -lt 400 ]; then
+              echo "Health check passed with HTTP $status_code"
+              exit 0
+            fi
+
+            echo "Attempt $i/10: health check failed with HTTP $status_code"
+            sleep 10
+          done
+
+          echo "::error::Health check failed after deployment."
+          exit 1
