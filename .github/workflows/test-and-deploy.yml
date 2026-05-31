@@ -117,9 +117,9 @@ jobs:
               echo "k6 test directory removed from production."
             fi
 
-            docker compose -f laradock/docker-compose.yml exec -T --user=laradock workspace php artisan config:cache
-            docker compose -f laradock/docker-compose.yml exec -T --user=laradock workspace php artisan route:cache
-            docker compose -f laradock/docker-compose.yml exec -T --user=laradock workspace php artisan view:cache
+            docker compose -f ../laradock/docker-compose.yml exec -T --user=laradock workspace php artisan config:cache
+            docker compose -f ../laradock/docker-compose.yml exec -T --user=laradock workspace php artisan route:cache
+            docker compose -f ../laradock/docker-compose.yml exec -T --user=laradock workspace php artisan view:cache
 
       - name: Health check on GCP VM
         uses: appleboy/ssh-action@v1.0.3
