@@ -52,13 +52,15 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo, pdo_mysql, bcmath
-          coverage: none
+          extensions: mbstring, pdo, pdo_mysql, bcmath, pcov
+          coverage: pcov
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
@@ -79,11 +81,13 @@ jobs:
       - name: Run database migrations for testing
         run: php artisan migrate --env=testing --force
 
-      - name: Run Unit tests
-        run: php artisan test --testsuite=Unit --env=testing
+      - name: Run all tests & Generate Coverage
+        run: php artisan test --coverage-clover=coverage.xml --env=testing
 
-      - name: Run Feature tests
-        run: php artisan test --testsuite=Feature --env=testing
+      - name: SonarQube Cloud Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   deploy:
     name: Deploy to GCP VM
