@@ -119,9 +119,9 @@ jobs:
 
             cd ../laradock
 
-            docker compose exec -T --user=laradock workspace php artisan config:cache
-            docker compose exec -T --user=laradock workspace php artisan route:cache
-            docker compose exec -T --user=laradock workspace php artisan view:cache
+            docker compose exec -T --user=laradock workspace cd shop-api && php artisan config:cache
+            docker compose exec -T --user=laradock workspace cd shop-api && php artisan route:cache
+            docker compose exec -T --user=laradock workspace cd shop-api && php artisan view:cache
 
       - name: Health check on GCP VM
         uses: appleboy/ssh-action@v1.0.3
