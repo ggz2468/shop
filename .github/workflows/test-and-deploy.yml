@@ -75,7 +75,20 @@ jobs:
 
       - name: Prepare application key for testing
         run: |
-          cp .env.testing .env
+          if [ -f .env.testing ]; then
+            cp .env.testing .env
+          elif [ -f .env.testing.example ]; then
+            cp .env.testing.example .env
+          else
+            cp .env.example .env
+          fi
+
+          if grep -q '^DB_PASSWORD=$' .env; then
+            sed -i 's/^DB_PASSWORD=$/DB_PASSWORD=root/' .env
+          elif ! grep -q '^DB_PASSWORD=' .env; then
+            echo 'DB_PASSWORD=root' >> .env
+          fi
+
           php artisan key:generate --env=testing --force
 
       - name: Run database migrations for testing
