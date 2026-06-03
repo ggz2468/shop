@@ -26,6 +26,8 @@ composer install
 3. 設定環境變數
 ```bash
 cp .env.example .env
+cp .env.performance.example .env.performance
+cp .env.testing.example .env.testing
 ```
 4. 切換至 laradock/ 目錄
 ```bash
@@ -48,8 +50,13 @@ cd shop-api
 php artisan key:generate
 php artisan migrate --seed
 ```
-9. 新增次月的 Partition 分區，並刪除過舊的 Partition 分區
+9. 手動產生兩組 APP_KEY 分別寫入 .env.performance 與 .env.testing 中
+```bash
+php artisan key:generate --show
+php artisan key:generate --show
+```
+10. 新增次月的 Partition 分區，並刪除過舊的 Partition 分區
 ```bash
 php artisan app:maintain-product-view-counts-partitions
 ```
-10. API 入口網址: http://localhost/api
+11. API 入口網址: http://localhost/api
