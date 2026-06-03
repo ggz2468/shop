@@ -120,6 +120,10 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.GCP_PROJECT_PATH }}
+
+            # 還原可能被本機修改或刪除的追蹤檔案，避免 git pull 因工作目錄不乾淨而中斷
+            git restore --worktree --staged .env.testing tests/k6 || true
+
             git fetch origin main
             git checkout main
             git pull --ff-only origin main
