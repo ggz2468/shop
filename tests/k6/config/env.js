@@ -18,6 +18,6 @@ export function toBoolean(name, fallback = false) {
 }
 
 export const env = {
-    baseUrl: __ENV.BASE_URL || 'http://localhost',
+    baseUrl: __ENV.BASE_URL || 'http://localhost:8888',
     testDuration: __ENV.TEST_DURATION || '2m',
 };
