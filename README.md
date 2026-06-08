@@ -13,27 +13,33 @@
 7. Docker 29.4.0
 8. Docker Compose 5.1.2
 
-### 安裝步驟
-1. 下載專案並切換至專案目錄
+### 安裝步驟(請先自行安裝 Laradock)
+1. 下載專案
 ```bash
 git clone git@github.com:ggz2468/shop-api.git
-cd shop-api
 ```
-2. 安裝必要套件
+2. 切換至 laradock/ 目錄
 ```bash
-composer install
+cd laradock/
 ```
-3. 設定環境變數
+3. 啟動開發環境
 ```bash
-cp .env.example .env
-cp .env.performance.example .env.performance
-cp .env.testing.example .env.testing
+docker compose up -d nginx mysql redis workspace php-worker
 ```
-4. 切換至 laradock/ 目錄
+4. 進入 Workspace 容器內
 ```bash
-cd ../laradock
+docker compose exec --user=laradock workspace bash
 ```
-5. 定義 Nginx 設定檔內容
+5. 切換至 laradock/nginx/sites/ 目錄
+```bash
+cd laradock/nginx/sites/
+```
+6. 新增 Nginx 設定檔
+```bash
+touch shop.conf
+touch shop-performance.conf
+```
+7. 定義 Nginx 設定檔內容
 #### laradock/nginx/sites/shop.conf
 ```nginx
 server {
@@ -145,7 +151,15 @@ server {
     error_log /var/log/nginx/shop-performance_error.log;
 }
 ```
-6. 將壓力測試專用 Port 映射至主機:
+8. 退出 Workspace 容器
+```bash
+exit
+```
+9. 重新啟動 Nginx 容器使新設定生效
+```bash
+docker compose restart nginx
+```
+10. 將壓力測試專用 Port 映射至主機:
 ```bash
 vim docker-compose.yml
 ```
@@ -156,31 +170,45 @@ nginx:
     ...
     - "8888:8888"
 ```
-7. 啟動開發環境
+11. 建立並啟動一個全新的 Nginx 容器
 ```bash
-docker compose up -d nginx mysql redis workspace php-worker
+docker compose up -d nginx
 ```
-8. 進入 Workspace 容器內
+12. 進入 Workspace 容器內
 ```bash
 docker compose exec --user=laradock workspace bash
 ```
-9. 切換至專案目錄
+13. 切換至專案目錄
 ```bash
-cd shop-api
+cd shop-api/
 ```
-10. 初始化應用程式
+14. 安裝必要套件
+```bash
+composer install
+```
+15. 設定環境變數
+```bash
+cp .env.example .env
+cp .env.performance.example .env.performance
+cp .env.testing.example .env.testing
+```
+16. 初始化應用程式
 ```bash
 php artisan key:generate
 php artisan migrate --seed
 ```
-11. 手動產生兩組 APP_KEY 分別寫入 .env.performance 與 .env.testing 中
+17. 手動產生兩組 APP_KEY 分別寫入 .env.performance 與 .env.testing 中
 ```bash
 php artisan key:generate --show
 php artisan key:generate --show
 ```
-12. 新增次月的 Partition 分區，並刪除過舊的 Partition 分區
+18. 新增次月的 Partition 分區，並刪除過舊的 Partition 分區
 ```bash
 php artisan app:maintain-product-view-counts-partitions
+```
+19. 建立 storage 軟連結
+```bash
+php artisan storage:link
 ```
 
 ### API 入口網址
