@@ -79,7 +79,7 @@ class ProductRepository extends Repository
                     'price' => $product->price,
                     'description' => $product->description,
                     'view_counts' => $product->view_counts,
-                    'image_path' => $product->images->first()?->url ?? '/storage/images/products/default.png',
+                    'image_path' => $product->images->first()?->url ?? '/images/products/default.svg',
                 ],
             ])
             ->all();

@@ -59,7 +59,7 @@ class ProductService
             'price' => $product->price,
             'description' => $product->description,
             'view_counts' => $product->view_counts,
-            'image_path' => $product->images->first()?->url ?? '/storage/images/products/default.png'
+            'image_path' => $product->images->first()?->url ?? '/images/products/default.svg'
         ];
 
         // 將產品資料存入 Cache 中，並設定過期時間為 1 小時
