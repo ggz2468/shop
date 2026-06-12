@@ -6,6 +6,7 @@ use App\Models\Image;
 use App\Models\Product;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
 
 class ProductSeeder extends Seeder
 {
@@ -14,23 +15,32 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $names = array_values(array_unique(ProductFactory::names()));
+        $seedCount = 15;
+        $imagePaths = ProductFactory::imagePaths();
+        $catalog = array_values(array_map(
+            fn (string $path): array => [
+                'name' => pathinfo($path, PATHINFO_FILENAME),
+                'url' => '/storage/' . $path,
+            ],
+            $imagePaths
+        ));
 
-        $products = Product::factory()
-            ->count(count($names))
-            ->sequence(fn ($sequence) => [
-                'product_spec_id' => 1,
-                'name' => $names[$sequence->index],
-                'description' => '這是 ' . $names[$sequence->index] . ' 的描述。'
-            ])
-            ->create();
-
-        $products->each(function (Product $product) {
-            Image::factory()->create([
-                'url' => '/storage/images/products/' . $product->name . '.gif',
-                'imageable_id' => $product->id,
-                'imageable_type' => Product::class
+        for ($index = 0; $index < $seedCount; $index++) {
+            $item = Arr::get($catalog, $index, [
+                'name' => ProductFactory::fallbackName(),
+                'url' => ProductFactory::PLACEHOLDER_IMAGE_URL,
             ]);
-        });
+            $productName = $item['name'];
+            $product = Product::factory()->create([
+                'name' => $productName,
+                'description' => "這是 {$productName} 的描述。",
+            ]);
+
+            Image::factory()->create([
+                'url' => $item['url'],
+                'imageable_type' => Product::class,
+                'imageable_id' => $product->id,
+            ]);
+        }
     }
 }
