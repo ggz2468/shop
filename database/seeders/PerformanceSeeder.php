@@ -48,7 +48,7 @@ class PerformanceSeeder extends Seeder
 
             $products->each(function (Product $product): void {
                 Image::query()->create([
-                    'url' => '/storage/images/products/default.png',
+                    'url' => ProductFactory::PLACEHOLDER_IMAGE_URL,
                     'imageable_id' => $product->id,
                     'imageable_type' => Product::class,
                 ]);

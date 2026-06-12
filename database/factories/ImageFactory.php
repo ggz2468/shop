@@ -17,7 +17,7 @@ class ImageFactory extends Factory
     public function definition(): array
     {
         return [
-            'url' => 'default.png',
+            'url' => ProductFactory::PLACEHOLDER_IMAGE_URL,
             'imageable_id' => 0,
             'imageable_type' => '',
             'created_at' => now(),
