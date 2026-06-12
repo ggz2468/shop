@@ -18,28 +18,12 @@
 ```bash
 git clone git@github.com:ggz2468/shop-api.git
 ```
-2. 切換至 laradock/ 目錄
+2. 切換至 Laradock 目錄，先完成設定
 ```bash
 cd laradock/
 ```
-3. 啟動開發環境
-```bash
-docker compose up -d nginx mysql redis workspace php-worker
-```
-4. 進入 Workspace 容器內
-```bash
-docker compose exec --user=laradock workspace bash
-```
-5. 切換至 laradock/nginx/sites/ 目錄
-```bash
-cd laradock/nginx/sites/
-```
-6. 新增 Nginx 設定檔
-```bash
-touch shop.conf
-touch shop-performance.conf
-```
-7. 定義 Nginx 設定檔內容
+在這個目錄下，請建立或編輯以下檔案；如果檔案已存在，可以直接修改，不需要先 `touch`。
+
 #### laradock/nginx/sites/shop.conf
 ```nginx
 server {
@@ -151,65 +135,109 @@ server {
     error_log /var/log/nginx/shop-performance_error.log;
 }
 ```
-8. 退出 Workspace 容器
+如果需要壓力測試，再把 `docker-compose.yml` 的 nginx ports 加上 `8888:8888`。
+完成後回到 Laradock 目錄，用一個指令啟動或重建服務：
+
 ```bash
-exit
+docker compose up -d --force-recreate nginx mysql redis workspace php-worker
 ```
-9. 重新啟動 Nginx 容器使新設定生效
-```bash
-docker compose restart nginx
-```
-10. 將壓力測試專用 Port 映射至主機:
-```bash
-vim docker-compose.yml
-```
-```yaml
-nginx:
-  ...
-  ports:
-    ...
-    - "8888:8888"
-```
-11. 建立並啟動一個全新的 Nginx 容器
-```bash
-docker compose up -d nginx
-```
-12. 進入 Workspace 容器內
+3. 進入 Workspace 容器內
 ```bash
 docker compose exec --user=laradock workspace bash
 ```
-13. 切換至專案目錄
+4. 切換至專案目錄
 ```bash
-cd shop-api/
+cd /var/www/shop-api
 ```
-14. 安裝必要套件
+5. 安裝必要套件並建立環境檔案
 ```bash
 composer install
-```
-15. 設定環境變數
-```bash
 cp .env.example .env
 cp .env.performance.example .env.performance
 cp .env.testing.example .env.testing
 ```
-16. 初始化應用程式
+6. 初始化應用程式
 ```bash
 php artisan key:generate
 php artisan migrate --seed
 ```
-17. 手動產生兩組 APP_KEY 分別寫入 .env.performance 與 .env.testing 中
+7. 產生 `.env.performance` 與 `.env.testing` 的 APP_KEY，並分別貼回對應檔案中
 ```bash
-php artisan key:generate --show
-php artisan key:generate --show
+php artisan key:generate --show --env=performance
+php artisan key:generate --show --env=testing
 ```
-18. 新增次月的 Partition 分區，並刪除過舊的 Partition 分區
+8. 執行 product_view_counts 資料表的 Partition 維護
 ```bash
 php artisan app:maintain-product-view-counts-partitions
 ```
-19. 建立 storage 軟連結
+9. 建立 storage 軟連結
 ```bash
 php artisan storage:link
 ```
+
+### 測試方式
+本專案的 PHP / Composer / Artisan 指令請在 Laradock `workspace` 容器內執行。
+
+```bash
+cd ../laradock
+docker compose exec --user=laradock workspace bash -lc 'cd /var/www/shop-api && <command>'
+```
+
+#### Unit Test
+Unit Test 主要驗證 `app/Services`、`app/Repositories` 等可獨立測試的邏輯。
+
+```bash
+cd ../laradock
+docker compose exec --user=laradock workspace bash -lc 'cd /var/www/shop-api && php artisan test --testsuite=Unit --env=testing'
+```
+
+如果要執行整體測試，也可以直接使用 Composer Script：
+
+```bash
+cd ../laradock
+docker compose exec --user=laradock workspace bash -lc 'cd /var/www/shop-api && composer test'
+```
+
+#### Feature Test
+Feature Test 主要驗證 API 端點、Middleware、認證流程與資料庫互動。
+
+```bash
+cd ../laradock
+docker compose exec --user=laradock workspace bash -lc 'cd /var/www/shop-api && php artisan test --testsuite=Feature --env=testing'
+```
+
+#### 壓力測試（k6）
+壓力測試使用 `tests/k6/` 內的腳本，搭配 `.env.performance` 與獨立的 performance 資料庫。
+
+1. 先確認已完成 README 前面的 `shop-performance.conf` 設定、`8888:8888` Port 映射，以及 `.env.performance` 檔案建立。
+2. 重新建立並灌入壓測資料：
+
+```bash
+cd ../laradock
+docker compose exec --user=laradock workspace bash -lc 'cd /var/www/shop-api && bash tests/k6/prepare-performance-data.sh'
+```
+
+3. 執行 k6 壓測腳本（請先確認執行環境已安裝 k6 CLI）：
+
+```bash
+BASE_URL=http://localhost:8888 TEST_DURATION=2m k6 run tests/k6/single/products-list.js
+```
+
+4. 若要模擬吞吐量超過限制的情境，可加上：
+
+```bash
+ALLOW_THROTTLE=true TARGET_RPS=5 BASE_URL=http://localhost:8888 TEST_DURATION=2m k6 run tests/k6/single/products-list.js
+```
+
+5. 壓測完成後清理資料：
+
+```bash
+cd ../laradock
+docker compose exec --user=laradock workspace bash -lc 'cd /var/www/shop-api && bash tests/k6/cleanup-performance-data.sh'
+```
+
+#### CI 內的測試
+GitHub Actions 會在 `main` 分支的推送與 Pull Request 時執行 Unit / Feature Tests，並產生 coverage 給 SonarQube 使用。
 
 ### API 入口網址
 <a href="http://localhost/api">http://localhost/api</a>
