@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Cache\CacheManager;
 use App\Models\Product;
 
 class ProductRepository extends Repository
@@ -36,6 +36,18 @@ class ProductRepository extends Repository
     public const int DEFAULT_PAGE = 1;
 
     /**
+     * 建構子
+     *
+     * @param \Illuminate\Cache\CacheManager $cache
+     * @return void
+     */
+    public function __construct(
+        private CacheManager $cache,
+    ) {
+        parent::__construct();
+    }
+
+    /**
      * 取得產品
      * 
      * @param int $rowCountsPerPage 每頁資料筆數
@@ -49,7 +61,7 @@ class ProductRepository extends Repository
 
         // 取得產品編號
         $productIdsCacheKey = "product_ids:page:{$page}:row_counts_per_page:{$rowCountsPerPage}";
-        $productIds = Cache::tags(['products_index'])->remember($productIdsCacheKey, 3600, function () use ($rowCountsPerPage, $page) {
+        $productIds = $this->cache->tags(['products_index'])->remember($productIdsCacheKey, 3600, function () use ($rowCountsPerPage, $page) {
             $paginator = $this->paginate([], ['images'], [[self::DEFAULT_SORT_FIELD, self::DEFAULT_SORT_DIRECTION], ['id', 'asc']], $rowCountsPerPage, $page);
             return collect($paginator->items())
                 ->pluck('id')
@@ -60,7 +72,7 @@ class ProductRepository extends Repository
         $cacheKeys = array_map(fn ($id) => "product:{$id}", $productIds);
 
         // 取得存在 Cache 中的產品資料
-        $products = Cache::tags(['products'])->many($cacheKeys);
+        $products = $this->cache->tags(['products'])->many($cacheKeys);
 
         // 取得不存在於 Cache 中的產品編號
         $missingProductIds = array_map(
@@ -85,7 +97,7 @@ class ProductRepository extends Repository
             ->all();
 
         // 將原先不存在於 Cache 中的產品資料存入 Cache
-        Cache::tags(['products'])->putMany($missingProducts, 3600);
+        $this->cache->tags(['products'])->putMany($missingProducts, 3600);
 
         // 將原先存在於 Cache 中的產品資料與剛剛從資料庫中取得的產品資料合併
         $products = array_merge($products, $missingProducts);
