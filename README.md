@@ -220,13 +220,13 @@ docker compose exec --user=laradock workspace bash -lc 'cd /var/www/shop-api && 
 3. 執行 k6 壓測腳本（請先確認執行環境已安裝 k6 CLI）：
 
 ```bash
-BASE_URL=http://localhost:8888 TEST_DURATION=2m k6 run tests/k6/single/products-list.js
+BASE_URL=http://localhost:8888 TEST_DURATION=2m k6 run {SCRIPT_PATH}
 ```
 
 4. 若要模擬吞吐量超過限制的情境，可加上：
 
 ```bash
-ALLOW_THROTTLE=true TARGET_RPS=5 BASE_URL=http://localhost:8888 TEST_DURATION=2m k6 run tests/k6/single/products-list.js
+ALLOW_THROTTLE=true TARGET_RPS=5 BASE_URL=http://localhost:8888 TEST_DURATION=2m k6 run {SCRIPT_PATH}
 ```
 
 5. 壓測完成後清理資料：
