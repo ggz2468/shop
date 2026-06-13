@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Repositories\ProductRepository;
 use App\Models\Product;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Cache\CacheManager;
+use Illuminate\Redis\RedisManager;
 
 class ProductService
 {
@@ -13,10 +13,14 @@ class ProductService
      * 建構子
      * 
      * @param \App\Repositories\ProductRepository $productRepository
+     * @param \Illuminate\Cache\CacheManager $cache
+     * @param \Illuminate\Redis\RedisManager $redis
      * @return void
      */
     public function __construct(
-        private ProductRepository $productRepository
+        private ProductRepository $productRepository,
+        private CacheManager $cache,
+        private RedisManager $redis,
     ) {
         
     }
@@ -42,13 +46,14 @@ class ProductService
     public function getProductData(Product $product)
     {
         $cacheKey = "product:{$product->id}";
+        $productCache = $this->cache->tags(['products']);
 
         // 將儲存於 Redis 中的產品被瀏覽次數遞增
-        Redis::zIncrby('product_view_counts', 1, (string) $product->id);
+        $this->redis->zIncrby('product_view_counts', 1, (string) $product->id);
 
         // 如果產品資料存在於 Cache 中，直接從 Cache 中取得並回傳
-        if (Cache::tags(['products'])->has($cacheKey)) {
-            return Cache::tags(['products'])->get($cacheKey);
+        if ($productCache->has($cacheKey)) {
+            return $productCache->get($cacheKey);
         }
 
         $product->load('images');
@@ -63,7 +68,7 @@ class ProductService
         ];
 
         // 將產品資料存入 Cache 中，並設定過期時間為 1 小時
-        Cache::tags(['products'])->put($cacheKey, $productData, 3600);
+        $productCache->put($cacheKey, $productData, 3600);
 
         return $productData;
     }
