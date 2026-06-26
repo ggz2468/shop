@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\CartController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
@@ -43,4 +44,8 @@ Route::get('/health', function () {
         'service' => config('app.name'),
         'timestamp' => now()->toIso8601String(),
     ]);
+});
+
+Route::middleware(['auth:sanctum', 'throttle:carts'])->prefix('carts')->group(function () {
+    Route::get('/', [CartController::class, 'index']);
 });
