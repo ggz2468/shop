@@ -127,5 +127,14 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(200)->by('products:write:hour:' . $request->ip()),
             ];
         });
+
+        RateLimiter::for('carts', function (Request $request): array {
+            $memberKey = (string) ($request->user()?->id ?? $request->ip());
+
+            return [
+                Limit::perMinute(60)->by('carts:read:minute:' . $memberKey),
+                Limit::perHour(500)->by('carts:read:hour:' . $request->ip()),
+            ];
+        });
     }
 }
