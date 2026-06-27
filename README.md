@@ -24,6 +24,28 @@ cd laradock/
 ```
 在這個目錄下，請建立或編輯以下檔案；如果檔案已存在，可以直接修改，不需要先 `touch`。
 
+#### laradock/workspace/crontab/laradock
+```cron
+* * * * * laradock /usr/bin/php /var/www/shop-api/artisan schedule:run >> /dev/null 2>&1
+```
+#### laradock/php-worker/supervisord.d/shop-worker.conf
+```ini
+[program:shop-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=/bin/sh -c "cd /var/www/shop-api && getent hosts ${REDIS_HOST:-redis} >/dev/null 2>&1 && exec php artisan queue:work redis --sleep=3 --tries=3 --timeout=120 --queue=default --backoff=5 --max-time=3600"
+directory=/var/www/shop-api
+autostart=true
+autorestart=true
+numprocs=1
+user=laradock
+redirect_stderr=true
+stdout_logfile=/var/www/shop-api/storage/logs/worker.log
+stdout_logfile_maxbytes=20MB
+stdout_logfile_backups=10
+stopasgroup=true
+killasgroup=true
+stopwaitsecs=3600
+```
 #### laradock/nginx/sites/shop.conf
 ```nginx
 server {
