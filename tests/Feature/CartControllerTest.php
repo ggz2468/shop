@@ -2,20 +2,25 @@
 
 namespace Tests\Feature;
 
-use App\Services\CartService;
 use App\Models\Member;
+use App\Models\Product;
+use App\Services\CartService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\Sanctum;
 use Mockery;
 use Tests\TestCase;
 
 class CartControllerTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * 測試未驗證的訪客無法存取購物車相關的 API 端點
      */
     public function test_guest_cannot_access_cart_index(): void
     {
-        $response = $this->getJson('/api/carts');
+        $response = $this->getJson('/api/cart');
 
         $response->assertStatus(401);
     }
@@ -30,7 +35,7 @@ class CartControllerTest extends TestCase
 
         $this->mockCartItemsForMember($member, []);
 
-        $response = $this->getJson('/api/carts');
+        $response = $this->getJson('/api/cart');
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -39,19 +44,15 @@ class CartControllerTest extends TestCase
                         '*' => [
                             'product_id',
                             'quantity',
-                            'price',
-                            'subtotal',
                         ],
                     ],
                     'total_quantity',
-                    'subtotal',
                 ],
             ])
             ->assertJson([
                 'data' => [
                     'items' => [],
                     'total_quantity' => 0,
-                    'subtotal' => 0,
                 ],
             ]);
     }
@@ -69,20 +70,16 @@ class CartControllerTest extends TestCase
             [
                 'product_id' => 1,
                 'quantity' => 2,
-                'price' => 100,
-                'subtotal' => 200,
             ],
             [
                 'product_id' => 2,
                 'quantity' => 1,
-                'price' => 200,
-                'subtotal' => 200,
             ],
         ];
 
         $this->mockCartItemsForMember($member, $cartItems);
 
-        $response = $this->getJson('/api/carts');
+        $response = $this->getJson('/api/cart');
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -91,19 +88,15 @@ class CartControllerTest extends TestCase
                         '*' => [
                             'product_id',
                             'quantity',
-                            'price',
-                            'subtotal',
                         ],
                     ],
                     'total_quantity',
-                    'subtotal',
                 ],
             ])
             ->assertJson([
                 'data' => [
                     'items' => $cartItems,
                     'total_quantity' => 3,
-                    'subtotal' => 400,
                 ],
             ]);
     }
@@ -118,7 +111,7 @@ class CartControllerTest extends TestCase
 
         $this->mockCartItemsForMember($member, []);
 
-        $response = $this->getJson('/api/carts');
+        $response = $this->getJson('/api/cart');
 
         $response->assertOk();
     }
@@ -135,12 +128,10 @@ class CartControllerTest extends TestCase
             [
                 'product_id' => 1,
                 'quantity' => 2,
-                'price' => 100,
-                'subtotal' => 200,
             ],
         ]);
 
-        $response = $this->getJson('/api/carts');
+        $response = $this->getJson('/api/cart');
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -149,12 +140,9 @@ class CartControllerTest extends TestCase
                         '*' => [
                             'product_id',
                             'quantity',
-                            'price',
-                            'subtotal',
                         ],
                     ],
                     'total_quantity',
-                    'subtotal',
                 ],
             ]);
     }
@@ -171,62 +159,23 @@ class CartControllerTest extends TestCase
             [
                 'product_id' => 1,
                 'quantity' => 2,
-                'price' => 100,
-                'subtotal' => 200,
             ],
             [
                 'product_id' => 2,
                 'quantity' => 5,
-                'price' => 80,
-                'subtotal' => 400,
             ],
             [
                 'product_id' => 3,
                 'quantity' => 1,
-                'price' => 250,
-                'subtotal' => 250,
             ],
         ]);
 
-        $response = $this->getJson('/api/carts');
+        $response = $this->getJson('/api/cart');
 
         $response->assertOk()
             ->assertJson([
                 'data' => [
                     'total_quantity' => 8,
-                ],
-            ]);
-    }
-
-    /**
-     * 測試購物車小計總額會加總所有產品項目的小計
-     */
-    public function test_index_calculates_subtotal_from_cart_item_subtotals(): void
-    {
-        $member = Member::factory()->create();
-        Sanctum::actingAs($member);
-
-        $this->mockCartItemsForMember($member, [
-            [
-                'product_id' => 1,
-                'quantity' => 2,
-                'price' => 100,
-                'subtotal' => 200,
-            ],
-            [
-                'product_id' => 2,
-                'quantity' => 3,
-                'price' => 125,
-                'subtotal' => 375,
-            ],
-        ]);
-
-        $response = $this->getJson('/api/carts');
-
-        $response->assertOk()
-            ->assertJson([
-                'data' => [
-                    'subtotal' => 575,
                 ],
             ]);
     }
@@ -248,10 +197,346 @@ class CartControllerTest extends TestCase
         $this->app->instance(CartService::class, $cartService);
 
         for ($attempt = 0; $attempt < 60; $attempt++) {
-            $this->getJson('/api/carts')->assertOk();
+            $this->getJson('/api/cart')->assertOk();
         }
 
-        $this->getJson('/api/carts')->assertStatus(429);
+        $this->getJson('/api/cart')->assertStatus(429);
+    }
+
+    /**
+     * 測試未驗證的訪客無法加入產品到購物車。
+     */
+    public function test_guest_cannot_add_product_to_cart(): void
+    {
+        $response = $this->postJson('/api/cart/items', [
+            'product_id' => 1,
+            'quantity' => 1,
+        ]);
+
+        $response->assertStatus(401);
+    }
+
+    /**
+     * 測試加入產品時必須提供產品 ID 與數量。
+     */
+    public function test_store_returns_422_when_required_payload_is_missing(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('storeCartItem')->never();
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->postJson('/api/cart/items', []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['product_id', 'quantity']);
+    }
+
+    /**
+     * 測試加入產品時產品 ID 必須存在。
+     */
+    public function test_store_returns_422_when_product_does_not_exist(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('storeCartItem')->never();
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->postJson('/api/cart/items', [
+            'product_id' => 999,
+            'quantity' => 1,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['product_id']);
+    }
+
+    /**
+     * 測試加入產品時產品 ID 必須是整數。
+     */
+    public function test_store_returns_422_when_product_id_is_not_integer(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('storeCartItem')->never();
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->postJson('/api/cart/items', [
+            'product_id' => 'abc',
+            'quantity' => 1,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['product_id']);
+    }
+
+    /**
+     * 測試加入產品時數量必須是正整數。
+     */
+    public function test_store_returns_422_when_quantity_is_invalid(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('storeCartItem')->never();
+
+        $this->app->instance(CartService::class, $cartService);
+
+        foreach ([0, -1, 'abc'] as $quantity) {
+            $response = $this->postJson('/api/cart/items', [
+                'product_id' => $product->id,
+                'quantity' => $quantity,
+            ]);
+
+            $response->assertStatus(422)
+                ->assertJsonValidationErrors(['quantity']);
+        }
+    }
+
+    /**
+     * 測試已驗證的會員可以加入產品到購物車，並回傳 service 結果。
+     */
+    public function test_store_adds_product_to_cart_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('storeCartItem')
+            ->once()
+            ->with($member->id, $product->id, 2)
+            ->andReturn([
+                'status' => 201,
+                'message' => '產品已加入購物車。',
+                'data' => [
+                    'product_id' => $product->id,
+                    'quantity' => 2,
+                ],
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJson([
+                'message' => '產品已加入購物車。',
+                'data' => [
+                    'product_id' => $product->id,
+                    'quantity' => 2,
+                ],
+            ]);
+    }
+
+    /**
+     * 測試加入產品後可從購物車查詢 API 讀回該產品。
+     */
+    public function test_store_persists_product_to_cart_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ])->assertStatus(201)
+            ->assertJson([
+                'message' => '產品已加入購物車。',
+                'data' => [
+                    'product_id' => $product->id,
+                    'quantity' => 2,
+                ],
+            ]);
+
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [
+                        [
+                            'product_id' => $product->id,
+                            'quantity' => 2,
+                        ],
+                    ],
+                    'total_quantity' => 2,
+                ],
+            ]);
+    }
+
+    /**
+     * 測試不同會員的購物車資料會互相隔離。
+     */
+    public function test_store_keeps_cart_items_isolated_between_members(): void
+    {
+        $member = Member::factory()->create();
+        $anotherMember = Member::factory()->create();
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+        Cache::forget("cart:member:{$anotherMember->id}:items");
+
+        Sanctum::actingAs($member);
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ])->assertStatus(201);
+
+        Sanctum::actingAs($anotherMember);
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [],
+                    'total_quantity' => 0,
+                ],
+            ]);
+    }
+
+    /**
+     * 測試重複加入相同產品時會累加購物車中的產品數量。
+     */
+    public function test_store_increments_quantity_when_product_already_exists_in_cart(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertStatus(201);
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ])->assertStatus(201);
+
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [
+                        [
+                            'product_id' => $product->id,
+                            'quantity' => 3,
+                        ],
+                    ],
+                    'total_quantity' => 3,
+                ],
+            ]);
+    }
+
+    /**
+     * 測試加入產品時 service 回傳失敗狀態應原樣回傳。
+     */
+    public function test_store_propagates_service_failure_status_and_message(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('storeCartItem')
+            ->once()
+            ->with($member->id, $product->id, 3)
+            ->andReturn([
+                'status' => 409,
+                'message' => '產品無法加入購物車。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 3,
+        ]);
+
+        $response->assertStatus(409)
+            ->assertJson([
+                'message' => '產品無法加入購物車。',
+            ]);
+    }
+
+    /**
+     * 測試加入產品時 service 儲存失敗應回傳 503 錯誤訊息。
+     */
+    public function test_store_returns_503_when_cart_service_cannot_store_item(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('storeCartItem')
+            ->once()
+            ->with($member->id, $product->id, 1)
+            ->andReturn([
+                'status' => 503,
+                'message' => '產品加入會員購物車失敗，請稍後再試。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ]);
+
+        $response->assertStatus(503)
+            ->assertJson([
+                'message' => '產品加入會員購物車失敗，請稍後再試。',
+                'data' => [],
+            ]);
+    }
+
+    /**
+     * 測試加入產品會套用 RateLimiter。
+     */
+    public function test_store_is_rate_limited_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('storeCartItem')
+            ->times(60)
+            ->with($member->id, $product->id, 1)
+            ->andReturn([
+                'status' => 201,
+                'message' => '產品已加入購物車。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        for ($attempt = 0; $attempt < 60; $attempt++) {
+            $this->postJson('/api/cart/items', [
+                'product_id' => $product->id,
+                'quantity' => 1,
+            ])->assertStatus(201);
+        }
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertStatus(429);
     }
 
     /**
