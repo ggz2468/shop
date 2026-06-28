@@ -25,7 +25,7 @@ class CartController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $request)
+    public function show(Request $request)
     {
         $items = $this->cartService->getCartItems($request->user()->id);
 
@@ -33,8 +33,29 @@ class CartController extends Controller
             'data' => [
                 'items' => $items,
                 'total_quantity' => array_sum(array_column($items, 'quantity')),
-                'subtotal' => array_sum(array_column($items, 'subtotal')),
             ],
         ]);
+    }
+
+    /**
+     * 將產品加入購物車
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storeItem(Request $request)
+    {
+        // 資料格式驗證
+        $validated = $request->validate([
+            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $result = $this->cartService->storeCartItem($request->user()->id, $validated['product_id'], $validated['quantity']);
+
+        return response()->json([
+            'message' => $result['message'],
+            'data' => $result['data'] ?? [],
+        ], $result['status']);
     }
 }

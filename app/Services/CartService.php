@@ -28,4 +28,30 @@ class CartService
     {
         return $this->cartStore->getItems($memberId);
     }
+
+    /**
+     * 將產品加入會員購物車
+     *
+     * @param int $memberId
+     * @param int $productId
+     * @param int $quantity
+     * @return array<string, mixed>
+     */
+    public function storeCartItem(int $memberId, int $productId, int $quantity): array
+    {
+        $storedItemInfo = $this->cartStore->storeItem($memberId, $productId, $quantity);
+
+        if ($storedItemInfo === false) {
+            return [
+                'status' => 503,
+                'message' => '產品加入會員購物車失敗，請稍後再試。',
+            ];
+        }
+
+        return [
+            'status' => 201,
+            'message' => '產品已加入購物車。',
+            'data' => $storedItemInfo,
+        ];
+    }
 }
