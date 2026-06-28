@@ -128,12 +128,12 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
-        RateLimiter::for('carts', function (Request $request): array {
+        RateLimiter::for('cart', function (Request $request): array {
             $memberKey = (string) ($request->user()?->id ?? $request->ip());
 
             return [
-                Limit::perMinute(60)->by('carts:read:minute:' . $memberKey),
-                Limit::perHour(500)->by('carts:read:hour:' . $request->ip()),
+                Limit::perMinute(60)->by('cart:read:minute:' . $memberKey),
+                Limit::perHour(500)->by('cart:read:hour:' . $request->ip()),
             ];
         });
     }
