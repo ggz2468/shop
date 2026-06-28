@@ -46,6 +46,7 @@ Route::get('/health', function () {
     ]);
 });
 
-Route::middleware(['auth:sanctum', 'throttle:carts'])->prefix('carts')->group(function () {
-    Route::get('/', [CartController::class, 'index']);
+Route::middleware(['auth:sanctum', 'throttle:cart'])->prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'show']);
+    Route::post('/items', [CartController::class, 'storeItem']);
 });
