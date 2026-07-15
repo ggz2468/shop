@@ -313,4 +313,213 @@ class CartStoreTest extends TestCase
 
         $this->assertSame($storedItem, $result);
     }
+
+    /**
+     * 更新購物車產品項目：產品存在時應更新指定產品數量並寫回 cache。
+     */
+    public function test_update_item_updates_existing_item_quantity_and_persists_it(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $quantity = 5;
+        $existingItems = [
+            [
+                'product_id' => 1,
+                'quantity' => 2,
+            ],
+            [
+                'product_id' => $productId,
+                'quantity' => 1,
+            ],
+            [
+                'product_id' => 20,
+                'quantity' => 4,
+            ],
+        ];
+        $updatedItem = [
+            'product_id' => $productId,
+            'quantity' => $quantity,
+        ];
+        $expectedItems = [
+            [
+                'product_id' => 1,
+                'quantity' => 2,
+            ],
+            $updatedItem,
+            [
+                'product_id' => 20,
+                'quantity' => 4,
+            ],
+        ];
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->once())
+            ->method('put')
+            ->with('cart:member:1:items', $expectedItems)
+            ->willReturn(true);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->updateItem($memberId, $productId, $quantity);
+
+        $this->assertSame($updatedItem, $result);
+    }
+
+    /**
+     * 更新購物車產品項目：產品不存在於購物車時應回傳 null 且不寫回 cache。
+     */
+    public function test_update_item_returns_null_when_item_does_not_exist_in_member_cart(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $quantity = 5;
+        $existingItems = [
+            [
+                'product_id' => 1,
+                'quantity' => 2,
+            ],
+        ];
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->never())
+            ->method('put');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->updateItem($memberId, $productId, $quantity);
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * 更新購物車產品項目：cache 資料不是陣列時應視為空購物車並回傳 null。
+     */
+    public function test_update_item_returns_null_when_cached_value_is_not_array(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $quantity = 5;
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn('invalid-cart-items');
+        $cache->expects($this->never())
+            ->method('put');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->updateItem($memberId, $productId, $quantity);
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * 更新購物車產品項目：cache 寫入失敗時應回傳 false 並記錄錯誤。
+     */
+    public function test_update_item_returns_false_and_logs_error_when_cache_put_fails(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $quantity = 5;
+        $existingItems = [
+            [
+                'product_id' => $productId,
+                'quantity' => 1,
+            ],
+        ];
+        $updatedItem = [
+            'product_id' => $productId,
+            'quantity' => $quantity,
+        ];
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->once())
+            ->method('put')
+            ->with('cart:member:1:items', [$updatedItem])
+            ->willReturn(false);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('更新會員購物車中指定產品的數量失敗', $this->callback(function (array $context) use ($memberId, $productId, $quantity): bool {
+                return $context['member_id'] === $memberId
+                    && $context['product_id'] === $productId
+                    && $context['quantity'] === $quantity
+                    && $context['exception'] instanceof RuntimeException;
+            }));
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->updateItem($memberId, $productId, $quantity);
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * 更新購物車產品項目：cache 寫入發生例外時應回傳 false 並記錄錯誤。
+     */
+    public function test_update_item_returns_false_and_logs_error_when_cache_put_throws_exception(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $quantity = 5;
+        $existingItems = [
+            [
+                'product_id' => $productId,
+                'quantity' => 1,
+            ],
+        ];
+        $updatedItem = [
+            'product_id' => $productId,
+            'quantity' => $quantity,
+        ];
+        $exception = new RuntimeException('cache unavailable');
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->once())
+            ->method('put')
+            ->with('cart:member:1:items', [$updatedItem])
+            ->willThrowException($exception);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('更新會員購物車中指定產品的數量失敗', $this->callback(function (array $context) use ($memberId, $productId, $quantity, $exception): bool {
+                return $context['member_id'] === $memberId
+                    && $context['product_id'] === $productId
+                    && $context['quantity'] === $quantity
+                    && $context['exception'] === $exception;
+            }));
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->updateItem($memberId, $productId, $quantity);
+
+        $this->assertFalse($result);
+    }
 }

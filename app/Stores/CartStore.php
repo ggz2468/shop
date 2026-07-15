@@ -9,7 +9,12 @@ use Throwable;
 
 class CartStore
 {
-    private const CACHE_KEY_PREFIX = 'cart:member:';
+    /**
+     * 購物車 cache key 前綴字串
+     * 
+     * @var string
+     */
+    private const string CACHE_KEY_PREFIX = 'cart:member:';
 
     /**
      * 建構子
@@ -26,7 +31,7 @@ class CartStore
     }
 
     /**
-     * 取得會員購物車產品項目
+     * 取得會員購物車內容
      *
      * @param int $memberId
      * @return array<int, array<string, mixed>>
@@ -80,6 +85,56 @@ class CartStore
             return $storedItem;
         } catch (Throwable $e) {
             $this->logger->error('產品加入會員購物車失敗', [
+                'member_id' => $memberId,
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'exception' => $e,
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * 更新會員購物車中指定產品的數量
+     * 
+     * @param int $memberId
+     * @param int $productId
+     * @param int $quantity
+     * @return array<string, mixed>|false|null
+     */
+    public function updateItem(int $memberId, int $productId, int $quantity): array|false|null
+    {
+        try {
+            $updatedItem = [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+            ];
+            $cacheKey = $this->cacheKey($memberId);
+            $existingItems = $this->cache->get($cacheKey, []);
+            $existingItems = is_array($existingItems) ? $existingItems : [];
+
+            // 檢查是否存在相同產品
+            if (!in_array($productId, array_column($existingItems, 'product_id'))) {
+                return null;
+            }
+
+            // 更新指定產品的數量
+            foreach ($existingItems as &$item) {
+                if ($item['product_id'] !== $updatedItem['product_id']) {
+                    continue;
+                }
+
+                $item['quantity'] = $updatedItem['quantity'];
+                break;
+            }
+
+            if ($this->cache->put($cacheKey, $existingItems) === false) {
+                throw new RuntimeException('更新會員購物車中指定產品的數量失敗');
+            }
+
+            return $updatedItem;
+        } catch (Throwable $e) {
+            $this->logger->error('更新會員購物車中指定產品的數量失敗', [
                 'member_id' => $memberId,
                 'product_id' => $productId,
                 'quantity' => $quantity,

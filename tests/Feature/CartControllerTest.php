@@ -16,9 +16,9 @@ class CartControllerTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 測試未驗證的訪客無法存取購物車相關的 API 端點
+     * 顯示購物車內容: 未驗證的訪客無法存取購物車相關的 API 端點
      */
-    public function test_guest_cannot_access_cart_index(): void
+    public function test_guest_cannot_access_cart(): void
     {
         $response = $this->getJson('/api/cart');
 
@@ -26,9 +26,9 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試已驗證的會員可以存取購物車相關的 API 端點
+     * 顯示購物車內容: 已驗證的會員可以存取購物車相關的 API 端點
      */
-    public function test_index_returns_empty_cart_for_authenticated_member(): void
+    public function test_show_returns_empty_cart_for_authenticated_member(): void
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
@@ -58,9 +58,9 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試已驗證的會員可以存取購物車相關的 API 端點，並返回購物車中的產品
+     * 顯示購物車內容: 已驗證的會員可以存取購物車相關的 API 端點，並返回購物車中的產品
      */
-    public function test_index_returns_cart_items_for_authenticated_member(): void
+    public function test_show_returns_cart_items_for_authenticated_member(): void
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
@@ -102,9 +102,9 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試查詢購物車時會使用目前登入會員的 ID
+     * 顯示購物車內容: 查詢購物車時會使用目前登入會員的 ID
      */
-    public function test_index_uses_authenticated_member_id_to_fetch_cart_items(): void
+    public function test_show_uses_authenticated_member_id_to_fetch_cart_items(): void
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
@@ -117,9 +117,9 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試購物車產品項目回傳指定欄位結構
+     * 顯示購物車內容: 購物車產品項目回傳指定欄位結構
      */
-    public function test_index_returns_expected_cart_item_structure(): void
+    public function test_show_returns_expected_cart_item_structure(): void
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
@@ -148,9 +148,9 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試購物車總數量會加總所有產品項目的數量
+     * 顯示購物車內容: 購物車總數量會加總所有產品項目的數量
      */
-    public function test_index_calculates_total_quantity_from_cart_items(): void
+    public function test_show_calculates_total_quantity_from_cart_items(): void
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
@@ -181,9 +181,9 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試購物車查詢會套用 RateLimiter。
+     * 顯示購物車內容: 查詢購物車時會套用 RateLimiter。
      */
-    public function test_index_is_rate_limited_for_authenticated_member(): void
+    public function test_show_is_rate_limited_for_authenticated_member(): void
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
@@ -204,7 +204,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試未驗證的訪客無法加入產品到購物車。
+     * 將產品加入購物車: 未驗證的訪客無法加入產品到購物車。
      */
     public function test_guest_cannot_add_product_to_cart(): void
     {
@@ -217,7 +217,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試加入產品時必須提供產品 ID 與數量。
+     * 將產品加入購物車: 加入產品時必須提供產品 ID 與數量。
      */
     public function test_store_returns_422_when_required_payload_is_missing(): void
     {
@@ -236,7 +236,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試加入產品時產品 ID 必須存在。
+     * 將產品加入購物車: 加入產品時產品 ID 必須存在。
      */
     public function test_store_returns_422_when_product_does_not_exist(): void
     {
@@ -258,7 +258,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試加入產品時產品 ID 必須是整數。
+     * 將產品加入購物車: 加入產品時產品 ID 必須是整數。
      */
     public function test_store_returns_422_when_product_id_is_not_integer(): void
     {
@@ -280,7 +280,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試加入產品時數量必須是正整數。
+     * 將產品加入購物車: 加入產品時數量必須是正整數。
      */
     public function test_store_returns_422_when_quantity_is_invalid(): void
     {
@@ -305,7 +305,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試已驗證的會員可以加入產品到購物車，並回傳 service 結果。
+     * 將產品加入購物車: 已驗證的會員可以加入產品到購物車，並回傳 service 結果。
      */
     public function test_store_adds_product_to_cart_for_authenticated_member(): void
     {
@@ -344,7 +344,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試加入產品後可從購物車查詢 API 讀回該產品。
+     * 將產品加入購物車: 加入產品後可從購物車查詢 API 讀回該產品。
      */
     public function test_store_persists_product_to_cart_for_authenticated_member(): void
     {
@@ -381,7 +381,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試不同會員的購物車資料會互相隔離。
+     * 將產品加入購物車: 不同會員的購物車資料會互相隔離。
      */
     public function test_store_keeps_cart_items_isolated_between_members(): void
     {
@@ -409,7 +409,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試重複加入相同產品時會累加購物車中的產品數量。
+     * 將產品加入購物車: 重複加入相同產品時會累加購物車中的產品數量。
      */
     public function test_store_increments_quantity_when_product_already_exists_in_cart(): void
     {
@@ -444,7 +444,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試加入產品時 service 回傳失敗狀態應原樣回傳。
+     * 將產品加入購物車: 加入產品時 service 回傳失敗狀態應原樣回傳。
      */
     public function test_store_propagates_service_failure_status_and_message(): void
     {
@@ -475,7 +475,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試加入產品時 service 儲存失敗應回傳 503 錯誤訊息。
+     * 將產品加入購物車: 加入產品時 service 儲存失敗應回傳 503 錯誤訊息。
      */
     public function test_store_returns_503_when_cart_service_cannot_store_item(): void
     {
@@ -507,7 +507,7 @@ class CartControllerTest extends TestCase
     }
 
     /**
-     * 測試加入產品會套用 RateLimiter。
+     * 將產品加入購物車: 加入產品會套用 RateLimiter。
      */
     public function test_store_is_rate_limited_for_authenticated_member(): void
     {
@@ -535,6 +535,321 @@ class CartControllerTest extends TestCase
 
         $this->postJson('/api/cart/items', [
             'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertStatus(429);
+    }
+
+    /**
+     * 更新購物車產品數量: 未驗證的訪客無法更新購物車產品數量。
+     */
+    public function test_guest_cannot_update_cart_item_quantity(): void
+    {
+        $product = Product::factory()->create();
+
+        $response = $this->patchJson("/api/cart/items/{$product->id}", [
+            'quantity' => 2,
+        ]);
+
+        $response->assertStatus(401);
+    }
+
+    /**
+     * 更新購物車產品數量: 更新數量時必須提供數量。
+     */
+    public function test_update_returns_422_when_required_payload_is_missing(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('updateCartItem')->never();
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->patchJson("/api/cart/items/{$product->id}", []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['quantity']);
+    }
+
+    /**
+     * 更新購物車產品數量: 更新數量時數量必須是正整數。
+     */
+    public function test_update_returns_422_when_quantity_is_invalid(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('updateCartItem')->never();
+
+        $this->app->instance(CartService::class, $cartService);
+
+        foreach ([0, -1, 'abc'] as $quantity) {
+            $response = $this->patchJson("/api/cart/items/{$product->id}", [
+                'quantity' => $quantity,
+            ]);
+
+            $response->assertStatus(422)
+                ->assertJsonValidationErrors(['quantity']);
+        }
+    }
+
+    /**
+     * 更新購物車產品數量: 更新數量時路由中的產品必須存在。
+     */
+    public function test_update_returns_404_when_product_does_not_exist(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('updateCartItem')->never();
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->patchJson('/api/cart/items/999', [
+            'quantity' => 2,
+        ]);
+
+        $response->assertStatus(404);
+    }
+
+    /**
+     * 更新購物車產品數量: 已驗證的會員可以更新購物車中的產品數量，並回傳 service 結果。
+     */
+    public function test_update_changes_cart_item_quantity_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('updateCartItem')
+            ->once()
+            ->with($member->id, $product->id, 3)
+            ->andReturn([
+                'status' => 200,
+                'message' => '購物車產品數量已更新。',
+                'data' => [
+                    'product_id' => $product->id,
+                    'quantity' => 3,
+                ],
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->patchJson("/api/cart/items/{$product->id}", [
+            'quantity' => 3,
+        ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'message' => '購物車產品數量已更新。',
+                'data' => [
+                    'product_id' => $product->id,
+                    'quantity' => 3,
+                ],
+            ]);
+    }
+
+    /**
+     * 更新購物車產品數量: 更新產品數量後可從購物車查詢 API 讀回更新後數量。
+     */
+    public function test_update_persists_cart_item_quantity_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertStatus(201);
+
+        $this->patchJson("/api/cart/items/{$product->id}", [
+            'quantity' => 4,
+        ])->assertOk()
+            ->assertJson([
+                'message' => '購物車產品數量已更新。',
+                'data' => [
+                    'product_id' => $product->id,
+                    'quantity' => 4,
+                ],
+            ]);
+
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [
+                        [
+                            'product_id' => $product->id,
+                            'quantity' => 4,
+                        ],
+                    ],
+                    'total_quantity' => 4,
+                ],
+            ]);
+    }
+
+    /**
+     * 更新購物車產品數量: 產品存在但未加入會員購物車時回傳 404。
+     */
+    public function test_update_returns_404_when_existing_product_is_not_in_member_cart(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $response = $this->patchJson("/api/cart/items/{$product->id}", [
+            'quantity' => 2,
+        ]);
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'message' => '會員購物車中找不到指定產品。',
+                'data' => [],
+            ]);
+    }
+
+    /**
+     * 更新購物車產品數量: 更新不存在於購物車的產品時 service 回傳 404 應原樣回傳。
+     */
+    public function test_update_returns_404_when_product_is_not_in_cart(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('updateCartItem')
+            ->once()
+            ->with($member->id, $product->id, 2)
+            ->andReturn([
+                'status' => 404,
+                'message' => '會員購物車中找不到指定產品。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->patchJson("/api/cart/items/{$product->id}", [
+            'quantity' => 2,
+        ]);
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'message' => '會員購物車中找不到指定產品。',
+                'data' => [],
+            ]);
+    }
+
+    /**
+     * 更新購物車產品數量: 更新產品數量時 service 儲存失敗應回傳 503 錯誤訊息。
+     */
+    public function test_update_returns_503_when_cart_service_cannot_update_item(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('updateCartItem')
+            ->once()
+            ->with($member->id, $product->id, 2)
+            ->andReturn([
+                'status' => 503,
+                'message' => '會員購物車產品數量更新失敗，請稍後再試。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->patchJson("/api/cart/items/{$product->id}", [
+            'quantity' => 2,
+        ]);
+
+        $response->assertStatus(503)
+            ->assertJson([
+                'message' => '會員購物車產品數量更新失敗，請稍後再試。',
+                'data' => [],
+            ]);
+    }
+
+    /**
+     * 更新購物車產品數量: 不同會員的購物車資料會互相隔離。
+     */
+    public function test_update_keeps_cart_items_isolated_between_members(): void
+    {
+        $member = Member::factory()->create();
+        $anotherMember = Member::factory()->create();
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+        Cache::forget("cart:member:{$anotherMember->id}:items");
+
+        Sanctum::actingAs($member);
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertStatus(201);
+
+        Sanctum::actingAs($anotherMember);
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 5,
+        ])->assertStatus(201);
+
+        Sanctum::actingAs($member);
+        $this->patchJson("/api/cart/items/{$product->id}", [
+            'quantity' => 3,
+        ])->assertOk();
+
+        Sanctum::actingAs($anotherMember);
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [
+                        [
+                            'product_id' => $product->id,
+                            'quantity' => 5,
+                        ],
+                    ],
+                    'total_quantity' => 5,
+                ],
+            ]);
+    }
+
+    /**
+     * 更新購物車產品數量: 更新產品數量會套用 RateLimiter。
+     */
+    public function test_update_is_rate_limited_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('updateCartItem')
+            ->times(60)
+            ->with($member->id, $product->id, 1)
+            ->andReturn([
+                'status' => 200,
+                'message' => '購物車產品數量已更新。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        for ($attempt = 0; $attempt < 60; $attempt++) {
+            $this->patchJson("/api/cart/items/{$product->id}", [
+                'quantity' => 1,
+            ])->assertOk();
+        }
+
+        $this->patchJson("/api/cart/items/{$product->id}", [
             'quantity' => 1,
         ])->assertStatus(429);
     }

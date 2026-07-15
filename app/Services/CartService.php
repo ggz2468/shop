@@ -54,4 +54,37 @@ class CartService
             'data' => $storedItemInfo,
         ];
     }
+
+    /**
+     * 更新會員購物車中指定產品的數量
+     * 
+     * @param int $memberId
+     * @param int $productId
+     * @param int $quantity
+     * @return array<string, mixed>
+     */
+    public function updateCartItem(int $memberId, int $productId, int $quantity): array
+    {
+        $updatedItemInfo = $this->cartStore->updateItem($memberId, $productId, $quantity);
+
+        if ($updatedItemInfo === false) {
+            return [
+                'status' => 503,
+                'message' => '會員購物車產品數量更新失敗，請稍後再試。',
+            ];
+        }
+
+        if ($updatedItemInfo === null) {
+            return [
+                'status' => 404,
+                'message' => '會員購物車中找不到指定產品。',
+            ];
+        }
+
+        return [
+            'status' => 200,
+            'message' => '購物車產品數量已更新。',
+            'data' => $updatedItemInfo,
+        ];
+    }
 }
