@@ -186,4 +186,82 @@ class CartServiceTest extends TestCase
         ], $result);
         $this->assertArrayNotHasKey('data', $result);
     }
+
+    /**
+     * 刪除購物車產品：應將會員 id 與產品 id 交給 CartStore，並回傳刪除結果。
+     */
+    public function test_destroy_cart_item_removes_item_from_cart_store_for_member(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $cartItem = [
+            'product_id' => $productId,
+        ];
+
+        $cartStore = Mockery::mock(CartStore::class);
+        $cartStore->shouldReceive('destroyItem')
+            ->once()
+            ->with($memberId, $productId)
+            ->andReturn($cartItem);
+
+        $service = new CartService($cartStore);
+
+        $result = $service->destroyCartItem($memberId, $productId);
+
+        $this->assertSame([
+            'status' => 200,
+            'message' => '購物車產品已刪除。',
+            'data' => $cartItem,
+        ], $result);
+    }
+
+    /**
+     * 刪除購物車產品：CartStore 找不到指定產品時應回傳找不到狀態。
+     */
+    public function test_destroy_cart_item_returns_404_when_cart_store_cannot_find_item(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+
+        $cartStore = Mockery::mock(CartStore::class);
+        $cartStore->shouldReceive('destroyItem')
+            ->once()
+            ->with($memberId, $productId)
+            ->andReturn(null);
+
+        $service = new CartService($cartStore);
+
+        $result = $service->destroyCartItem($memberId, $productId);
+
+        $this->assertSame([
+            'status' => 404,
+            'message' => '會員購物車中找不到指定產品。',
+        ], $result);
+        $this->assertArrayNotHasKey('data', $result);
+    }
+
+    /**
+     * 刪除購物車產品：CartStore 刪除失敗時應回傳服務不可用狀態。
+     */
+    public function test_destroy_cart_item_returns_503_when_cart_store_fails_to_destroy_item(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+
+        $cartStore = Mockery::mock(CartStore::class);
+        $cartStore->shouldReceive('destroyItem')
+            ->once()
+            ->with($memberId, $productId)
+            ->andReturn(false);
+
+        $service = new CartService($cartStore);
+
+        $result = $service->destroyCartItem($memberId, $productId);
+
+        $this->assertSame([
+            'status' => 503,
+            'message' => '會員購物車產品刪除失敗，請稍後再試。',
+        ], $result);
+        $this->assertArrayNotHasKey('data', $result);
+    }
 }

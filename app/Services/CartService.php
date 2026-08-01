@@ -87,4 +87,36 @@ class CartService
             'data' => $updatedItemInfo,
         ];
     }
+
+    /**
+     * 刪除會員購物車中指定的產品
+     * 
+     * @param int $memberId
+     * @param int $productId
+     * @return array<string, mixed>
+     */
+    public function destroyCartItem(int $memberId, int $productId): array
+    {
+        $destroyedItemInfo = $this->cartStore->destroyItem($memberId, $productId);
+
+        if ($destroyedItemInfo === false) {
+            return [
+                'status' => 503,
+                'message' => '會員購物車產品刪除失敗，請稍後再試。',
+            ];
+        }
+
+        if ($destroyedItemInfo === null) {
+            return [
+                'status' => 404,
+                'message' => '會員購物車中找不到指定產品。',
+            ];
+        }
+
+        return [
+            'status' => 200,
+            'message' => '購物車產品已刪除。',
+            'data' => $destroyedItemInfo,
+        ];
+    }
 }

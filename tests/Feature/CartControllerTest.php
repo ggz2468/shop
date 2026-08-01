@@ -855,6 +855,299 @@ class CartControllerTest extends TestCase
     }
 
     /**
+     * 刪除購物車中指定的產品: 未驗證的訪客無法刪除購物車產品。
+     */
+    public function test_guest_cannot_delete_cart_item(): void
+    {
+        $product = Product::factory()->create();
+
+        $response = $this->deleteJson("/api/cart/items/{$product->id}");
+
+        $response->assertStatus(401);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 刪除產品時路由中的產品必須存在。
+     */
+    public function test_destroy_returns_404_when_product_does_not_exist(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('destroyCartItem')->never();
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->deleteJson('/api/cart/items/999');
+
+        $response->assertStatus(404);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 已驗證的會員可以刪除購物車中的產品，並回傳 service 結果。
+     */
+    public function test_destroy_removes_cart_item_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('destroyCartItem')
+            ->once()
+            ->with($member->id, $product->id)
+            ->andReturn([
+                'status' => 200,
+                'message' => '購物車產品已刪除。',
+                'data' => [
+                    'product_id' => $product->id,
+                ],
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->deleteJson("/api/cart/items/{$product->id}");
+
+        $response->assertOk()
+            ->assertJson([
+                'message' => '購物車產品已刪除。',
+                'data' => [
+                    'product_id' => $product->id,
+                ],
+            ]);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 刪除產品後無法再從購物車查詢 API 讀回該產品。
+     */
+    public function test_destroy_persists_removed_cart_item_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+        $remainingProduct = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ])->assertStatus(201);
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $remainingProduct->id,
+            'quantity' => 3,
+        ])->assertStatus(201);
+
+        $this->deleteJson("/api/cart/items/{$product->id}")
+            ->assertOk()
+            ->assertJson([
+                'message' => '購物車產品已刪除。',
+                'data' => [
+                    'product_id' => $product->id,
+                ],
+            ]);
+
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [
+                        [
+                            'product_id' => $remainingProduct->id,
+                            'quantity' => 3,
+                        ],
+                    ],
+                    'total_quantity' => 3,
+                ],
+            ])
+            ->assertJsonMissing([
+                'product_id' => $product->id,
+                'quantity' => 2,
+            ]);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 刪除購物車中唯一產品後會回到空購物車。
+     */
+    public function test_destroy_returns_empty_cart_after_removing_only_cart_item(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ])->assertStatus(201);
+
+        $this->deleteJson("/api/cart/items/{$product->id}")
+            ->assertOk()
+            ->assertJson([
+                'message' => '購物車產品已刪除。',
+                'data' => [
+                    'product_id' => $product->id,
+                ],
+            ]);
+
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [],
+                    'total_quantity' => 0,
+                ],
+            ]);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 產品存在但未加入會員購物車時回傳 404。
+     */
+    public function test_destroy_returns_404_when_existing_product_is_not_in_member_cart(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $response = $this->deleteJson("/api/cart/items/{$product->id}");
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'message' => '會員購物車中找不到指定產品。',
+                'data' => [],
+            ]);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 刪除不存在於購物車的產品時 service 回傳 404 應原樣回傳。
+     */
+    public function test_destroy_returns_404_when_product_is_not_in_cart(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('destroyCartItem')
+            ->once()
+            ->with($member->id, $product->id)
+            ->andReturn([
+                'status' => 404,
+                'message' => '會員購物車中找不到指定產品。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->deleteJson("/api/cart/items/{$product->id}");
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'message' => '會員購物車中找不到指定產品。',
+                'data' => [],
+            ]);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 刪除產品時 service 儲存失敗應回傳 503 錯誤訊息。
+     */
+    public function test_destroy_returns_503_when_cart_service_cannot_destroy_item(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('destroyCartItem')
+            ->once()
+            ->with($member->id, $product->id)
+            ->andReturn([
+                'status' => 503,
+                'message' => '會員購物車產品刪除失敗，請稍後再試。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->deleteJson("/api/cart/items/{$product->id}");
+
+        $response->assertStatus(503)
+            ->assertJson([
+                'message' => '會員購物車產品刪除失敗，請稍後再試。',
+                'data' => [],
+            ]);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 不同會員的購物車資料會互相隔離。
+     */
+    public function test_destroy_keeps_cart_items_isolated_between_members(): void
+    {
+        $member = Member::factory()->create();
+        $anotherMember = Member::factory()->create();
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+        Cache::forget("cart:member:{$anotherMember->id}:items");
+
+        Sanctum::actingAs($member);
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertStatus(201);
+
+        Sanctum::actingAs($anotherMember);
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 5,
+        ])->assertStatus(201);
+
+        Sanctum::actingAs($member);
+        $this->deleteJson("/api/cart/items/{$product->id}")->assertOk();
+
+        Sanctum::actingAs($anotherMember);
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [
+                        [
+                            'product_id' => $product->id,
+                            'quantity' => 5,
+                        ],
+                    ],
+                    'total_quantity' => 5,
+                ],
+            ]);
+    }
+
+    /**
+     * 刪除購物車中指定的產品: 刪除產品會套用 RateLimiter。
+     */
+    public function test_destroy_is_rate_limited_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('destroyCartItem')
+            ->times(60)
+            ->with($member->id, $product->id)
+            ->andReturn([
+                'status' => 200,
+                'message' => '購物車產品已刪除。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        for ($attempt = 0; $attempt < 60; $attempt++) {
+            $this->deleteJson("/api/cart/items/{$product->id}")->assertOk();
+        }
+
+        $this->deleteJson("/api/cart/items/{$product->id}")->assertStatus(429);
+    }
+
+    /**
      * 模擬指定會員的購物車項目
      *
      * @param \App\Models\Member $member

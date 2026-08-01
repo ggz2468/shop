@@ -2,6 +2,7 @@
 
 namespace App\Stores;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -15,6 +16,13 @@ class CartStore
      * @var string
      */
     private const string CACHE_KEY_PREFIX = 'cart:member:';
+
+    /**
+     * 購物車 cache 有效天數
+     * 
+     * @var int
+     */
+    private const int CACHE_TTL_DAYS = 7;
 
     /**
      * 建構子
@@ -59,26 +67,30 @@ class CartStore
                 'quantity' => $quantity,
             ];
             $cacheKey = $this->cacheKey($memberId);
-            $existingItems = $this->cache->get($cacheKey, []);
-            $existingItems = is_array($existingItems) ? $existingItems : [];
+            $existingItems = $this->getItems($memberId);
 
-            // 檢查是否已存在相同產品，若存在則更新數量
-            foreach ($existingItems as &$item) {
-                if ($item['product_id'] !== $storedItem['product_id']) {
-                    continue;
-                }
-                
-                $item['quantity'] += $storedItem['quantity'];
-                if ($this->cache->put($cacheKey, $existingItems) === false) {
+            // 若不存在相同產品，則新增項目
+            if (!in_array($productId, array_column($existingItems, 'product_id'), true)) {
+                $existingItems[] = $storedItem;
+
+                if ($this->cache->put($cacheKey, array_values($existingItems), $this->cartExpiresAt()) === false) {
                     throw new RuntimeException('產品加入會員購物車失敗');
                 }
 
                 return $storedItem;
             }
 
-            // 若不存在相同產品，則新增項目
-            $existingItems[] = $storedItem;
-            if ($this->cache->put($cacheKey, $existingItems) === false) {
+            // 更新會員購物車中產品數量
+            foreach ($existingItems as &$item) {
+                if ($item['product_id'] !== $storedItem['product_id']) {
+                    continue;
+                }
+                
+                $item['quantity'] += $storedItem['quantity'];
+                break;
+            }
+
+            if ($this->cache->put($cacheKey, array_values($existingItems), $this->cartExpiresAt()) === false) {
                 throw new RuntimeException('產品加入會員購物車失敗');
             }
 
@@ -110,11 +122,10 @@ class CartStore
                 'quantity' => $quantity,
             ];
             $cacheKey = $this->cacheKey($memberId);
-            $existingItems = $this->cache->get($cacheKey, []);
-            $existingItems = is_array($existingItems) ? $existingItems : [];
+            $existingItems = $this->getItems($memberId);
 
             // 檢查是否存在相同產品
-            if (!in_array($productId, array_column($existingItems, 'product_id'))) {
+            if (!in_array($productId, array_column($existingItems, 'product_id'), true)) {
                 return null;
             }
 
@@ -128,7 +139,7 @@ class CartStore
                 break;
             }
 
-            if ($this->cache->put($cacheKey, $existingItems) === false) {
+            if ($this->cache->put($cacheKey, array_values($existingItems), $this->cartExpiresAt()) === false) {
                 throw new RuntimeException('更新會員購物車中指定產品的數量失敗');
             }
 
@@ -145,11 +156,65 @@ class CartStore
     }
 
     /**
+     * 刪除會員購物車中指定的產品
+     * 
+     * @param int $memberId
+     * @param int $productId
+     * @return array<string, mixed>|false|null
+     */
+    public function destroyItem(int $memberId, int $productId): array|false|null
+    {
+        try {
+            $destroyedItem = [
+                'product_id' => $productId,
+            ];
+            $cacheKey = $this->cacheKey($memberId);
+            $existingItems = $this->getItems($memberId);
+
+            // 檢查是否存在相同產品
+            if (!in_array($productId, array_column($existingItems, 'product_id'), true)) {
+                return null;
+            }
+
+            // 刪除指定產品
+            foreach ($existingItems as $index => $item) {
+                if ($item['product_id'] !== $destroyedItem['product_id']) {
+                    continue;
+                }
+
+                unset($existingItems[$index]);
+                break;
+            }
+
+            if ($this->cache->put($cacheKey, array_values($existingItems), $this->cartExpiresAt()) === false) {
+                throw new RuntimeException('刪除會員購物車中指定的產品失敗');
+            }
+
+            return $destroyedItem;
+        } catch (Throwable $e) {
+            $this->logger->error('刪除會員購物車中指定的產品失敗', [
+                'member_id' => $memberId,
+                'product_id' => $productId,
+                'exception' => $e,
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * @param int $memberId
      * @return string
      */
     private function cacheKey(int $memberId): string
     {
         return self::CACHE_KEY_PREFIX . $memberId . ':items';
+    }
+
+    /**
+     * @return \Carbon\Carbon
+     */
+    private function cartExpiresAt(): Carbon
+    {
+        return Carbon::now()->addDays(self::CACHE_TTL_DAYS);
     }
 }

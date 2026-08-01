@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Stores\CartStore;
+use Carbon\Carbon;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -10,6 +11,26 @@ use RuntimeException;
 
 class CartStoreTest extends TestCase
 {
+    /**
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Carbon::setTestNow(Carbon::parse('2026-08-01 12:00:00'));
+    }
+
+    /**
+     * @return void
+     */
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
     /**
      * 取得購物車產品項目：應依會員 id 從 cache 取出產品項目。
      */
@@ -109,7 +130,7 @@ class CartStoreTest extends TestCase
             ->willReturn($existingItems);
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', $expectedItems)
+            ->with('cart:member:1:items', $expectedItems, $this->cartExpiresAt())
             ->willReturn(true);
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -140,7 +161,7 @@ class CartStoreTest extends TestCase
             ->willReturn([]);
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', [$storedItem])
+            ->with('cart:member:1:items', [$storedItem], $this->cartExpiresAt())
             ->willReturn(true);
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -191,7 +212,7 @@ class CartStoreTest extends TestCase
             ->willReturn($existingItems);
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', $expectedItems)
+            ->with('cart:member:1:items', $expectedItems, $this->cartExpiresAt())
             ->willReturn(true);
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -222,7 +243,7 @@ class CartStoreTest extends TestCase
             ->willReturn([]);
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', [$storedItem])
+            ->with('cart:member:1:items', [$storedItem], $this->cartExpiresAt())
             ->willReturn(false);
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
@@ -262,7 +283,7 @@ class CartStoreTest extends TestCase
             ->willReturn([]);
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', [$storedItem])
+            ->with('cart:member:1:items', [$storedItem], $this->cartExpiresAt())
             ->willThrowException($exception);
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
@@ -301,7 +322,7 @@ class CartStoreTest extends TestCase
             ->willReturn('invalid-cart-items');
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', [$storedItem])
+            ->with('cart:member:1:items', [$storedItem], $this->cartExpiresAt())
             ->willReturn(true);
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())
@@ -359,7 +380,7 @@ class CartStoreTest extends TestCase
             ->willReturn($existingItems);
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', $expectedItems)
+            ->with('cart:member:1:items', $expectedItems, $this->cartExpiresAt())
             ->willReturn(true);
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())
@@ -458,7 +479,7 @@ class CartStoreTest extends TestCase
             ->willReturn($existingItems);
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', [$updatedItem])
+            ->with('cart:member:1:items', [$updatedItem], $this->cartExpiresAt())
             ->willReturn(false);
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
@@ -504,7 +525,7 @@ class CartStoreTest extends TestCase
             ->willReturn($existingItems);
         $cache->expects($this->once())
             ->method('put')
-            ->with('cart:member:1:items', [$updatedItem])
+            ->with('cart:member:1:items', [$updatedItem], $this->cartExpiresAt())
             ->willThrowException($exception);
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
@@ -521,5 +542,259 @@ class CartStoreTest extends TestCase
         $result = $store->updateItem($memberId, $productId, $quantity);
 
         $this->assertFalse($result);
+    }
+
+    /**
+     * 刪除購物車產品項目：產品存在時應刪除指定產品並寫回 cache。
+     */
+    public function test_destroy_item_removes_existing_item_and_persists_it(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $existingItems = [
+            [
+                'product_id' => 1,
+                'quantity' => 2,
+            ],
+            [
+                'product_id' => $productId,
+                'quantity' => 1,
+            ],
+            [
+                'product_id' => 20,
+                'quantity' => 4,
+            ],
+        ];
+        $destroyedItem = [
+            'product_id' => $productId,
+        ];
+        $expectedItems = [
+            [
+                'product_id' => 1,
+                'quantity' => 2,
+            ],
+            [
+                'product_id' => 20,
+                'quantity' => 4,
+            ],
+        ];
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->once())
+            ->method('put')
+            ->with('cart:member:1:items', $expectedItems, $this->cartExpiresAt())
+            ->willReturn(true);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->destroyItem($memberId, $productId);
+
+        $this->assertSame($destroyedItem, $result);
+    }
+
+    /**
+     * 刪除購物車產品項目：移除中間項目時應重新建立陣列索引並保留其他項目順序。
+     */
+    public function test_destroy_item_reindexes_items_after_removing_middle_item(): void
+    {
+        $memberId = 1;
+        $productId = 20;
+        $existingItems = [
+            [
+                'product_id' => 10,
+                'quantity' => 1,
+            ],
+            [
+                'product_id' => $productId,
+                'quantity' => 2,
+            ],
+            [
+                'product_id' => 30,
+                'quantity' => 3,
+            ],
+        ];
+        $expectedItems = [
+            [
+                'product_id' => 10,
+                'quantity' => 1,
+            ],
+            [
+                'product_id' => 30,
+                'quantity' => 3,
+            ],
+        ];
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->once())
+            ->method('put')
+            ->with('cart:member:1:items', $expectedItems, $this->cartExpiresAt())
+            ->willReturn(true);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->destroyItem($memberId, $productId);
+
+        $this->assertSame([
+            'product_id' => $productId,
+        ], $result);
+    }
+
+    /**
+     * 刪除購物車產品項目：產品不存在於購物車時應回傳 null 且不寫回 cache。
+     */
+    public function test_destroy_item_returns_null_when_item_does_not_exist_in_member_cart(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $existingItems = [
+            [
+                'product_id' => 1,
+                'quantity' => 2,
+            ],
+        ];
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->never())
+            ->method('put');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->destroyItem($memberId, $productId);
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * 刪除購物車產品項目：cache 資料不是陣列時應視為空購物車並回傳 null。
+     */
+    public function test_destroy_item_returns_null_when_cached_value_is_not_array(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn('invalid-cart-items');
+        $cache->expects($this->never())
+            ->method('put');
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->destroyItem($memberId, $productId);
+
+        $this->assertNull($result);
+    }
+
+    /**
+     * 刪除購物車產品項目：cache 寫入失敗時應回傳 false 並記錄錯誤。
+     */
+    public function test_destroy_item_returns_false_and_logs_error_when_cache_put_fails(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $existingItems = [
+            [
+                'product_id' => $productId,
+                'quantity' => 1,
+            ],
+        ];
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->once())
+            ->method('put')
+            ->with('cart:member:1:items', [], $this->cartExpiresAt())
+            ->willReturn(false);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('刪除會員購物車中指定的產品失敗', $this->callback(function (array $context) use ($memberId, $productId): bool {
+                return $context['member_id'] === $memberId
+                    && $context['product_id'] === $productId
+                    && $context['exception'] instanceof RuntimeException;
+            }));
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->destroyItem($memberId, $productId);
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * 刪除購物車產品項目：cache 寫入發生例外時應回傳 false 並記錄錯誤。
+     */
+    public function test_destroy_item_returns_false_and_logs_error_when_cache_put_throws_exception(): void
+    {
+        $memberId = 1;
+        $productId = 10;
+        $existingItems = [
+            [
+                'product_id' => $productId,
+                'quantity' => 1,
+            ],
+        ];
+        $exception = new RuntimeException('cache unavailable');
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('get')
+            ->with('cart:member:1:items', [])
+            ->willReturn($existingItems);
+        $cache->expects($this->once())
+            ->method('put')
+            ->with('cart:member:1:items', [], $this->cartExpiresAt())
+            ->willThrowException($exception);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('刪除會員購物車中指定的產品失敗', $this->callback(function (array $context) use ($memberId, $productId, $exception): bool {
+                return $context['member_id'] === $memberId
+                    && $context['product_id'] === $productId
+                    && $context['exception'] === $exception;
+            }));
+
+        $store = new CartStore($cache, $logger);
+
+        $result = $store->destroyItem($memberId, $productId);
+
+        $this->assertFalse($result);
+    }
+
+    /**
+     * @return \Carbon\Carbon
+     */
+    private function cartExpiresAt(): Carbon
+    {
+        return Carbon::now()->addDays(7);
     }
 }

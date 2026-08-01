@@ -81,4 +81,21 @@ class CartController extends Controller
             'data' => $result['data'] ?? [],
         ], $result['status']);
     }
+
+    /**
+     * 刪除購物車中指定的產品
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Product $product
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroyItem(Request $request, Product $product)
+    {
+        $result = $this->cartService->destroyCartItem($request->user()->id, $product->id);
+
+        return response()->json([
+            'message' => $result['message'],
+            'data' => $result['data'] ?? [],
+        ], $result['status']);
+    }
 }
