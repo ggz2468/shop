@@ -98,4 +98,19 @@ class CartController extends Controller
             'data' => $result['data'] ?? [],
         ], $result['status']);
     }
+
+    /**
+     * 清空購物車
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function clear(Request $request)
+    {
+        $result = $this->cartService->clearCart($request->user()->id);
+
+        return response()->json([
+            'message' => $result['message'],
+        ], $result['status']);
+    }
 }

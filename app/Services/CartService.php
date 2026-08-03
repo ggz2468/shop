@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Stores\CartStore;
+use Throwable;
 
 class CartService
 {
@@ -118,5 +119,28 @@ class CartService
             'message' => '購物車產品已刪除。',
             'data' => $destroyedItemInfo,
         ];
+    }
+
+    /**
+     * 清空會員購物車
+     * 
+     * @param int $memberId
+     * @return array<string, mixed>
+     */
+    public function clearCart(int $memberId): array
+    {
+        try {
+            $this->cartStore->clearCart($memberId);
+
+            return [
+                'status' => 200,
+                'message' => '購物車已清空。',
+            ];
+        } catch (Throwable $e) {
+            return [
+                'status' => 503,
+                'message' => '會員購物車清空失敗，請稍後再試。',
+            ];
+        }
     }
 }

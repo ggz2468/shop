@@ -51,4 +51,5 @@ Route::middleware(['auth:sanctum', 'throttle:cart'])->prefix('cart')->group(func
     Route::post('/items', [CartController::class, 'storeItem']);
     Route::patch('/items/{product}', [CartController::class, 'updateItem']);
     Route::delete('/items/{product}', [CartController::class, 'destroyItem']);
+    Route::delete('/items', [CartController::class, 'clear']);
 });

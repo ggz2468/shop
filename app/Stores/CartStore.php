@@ -202,6 +202,27 @@ class CartStore
     }
 
     /**
+     * 清空會員購物車
+     * 
+     * @param int $memberId
+     * @return void
+     * 
+     * @throws \RuntimeException
+     */
+    public function clearCart(int $memberId): void
+    {
+        try {
+            $this->cache->forget($this->cacheKey($memberId));
+        } catch (Throwable $e) {
+            $this->logger->error('清空會員購物車失敗', [
+                'member_id' => $memberId,
+                'exception' => $e,
+            ]);
+            throw new RuntimeException('清空會員購物車失敗', previous: $e);
+        }
+    }
+
+    /**
      * @param int $memberId
      * @return string
      */

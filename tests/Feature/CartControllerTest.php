@@ -1148,6 +1148,196 @@ class CartControllerTest extends TestCase
     }
 
     /**
+     * 清空購物車: 未驗證的訪客無法清空購物車。
+     */
+    public function test_guest_cannot_clear_cart_items(): void
+    {
+        $response = $this->deleteJson('/api/cart/items');
+
+        $response->assertStatus(401);
+    }
+
+    /**
+     * 清空購物車: 已驗證的會員可以清空購物車，並回傳 service 結果。
+     */
+    public function test_clear_removes_all_cart_items_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('clearCart')
+            ->once()
+            ->with($member->id)
+            ->andReturn([
+                'status' => 200,
+                'message' => '購物車已清空。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->deleteJson('/api/cart/items');
+
+        $response->assertOk()
+            ->assertJson([
+                'message' => '購物車已清空。',
+            ])
+            ->assertJsonMissingPath('data');
+    }
+
+    /**
+     * 清空購物車: 清空後無法再從購物車查詢 API 讀回任何產品。
+     */
+    public function test_clear_persists_empty_cart_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        $product = Product::factory()->create();
+        $anotherProduct = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 2,
+        ])->assertStatus(201);
+
+        $this->postJson('/api/cart/items', [
+            'product_id' => $anotherProduct->id,
+            'quantity' => 3,
+        ])->assertStatus(201);
+
+        $this->deleteJson('/api/cart/items')
+            ->assertOk()
+            ->assertJson([
+                'message' => '購物車已清空。',
+            ])
+            ->assertJsonMissingPath('data');
+
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [],
+                    'total_quantity' => 0,
+                ],
+            ]);
+    }
+
+    /**
+     * 清空購物車: 清空空購物車也會回傳成功。
+     */
+    public function test_clear_returns_ok_when_cart_is_already_empty(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+        Cache::forget("cart:member:{$member->id}:items");
+
+        $response = $this->deleteJson('/api/cart/items');
+
+        $response->assertOk()
+            ->assertJson([
+                'message' => '購物車已清空。',
+            ])
+            ->assertJsonMissingPath('data');
+    }
+
+    /**
+     * 清空購物車: 清空購物車時 service 儲存失敗應回傳 503 錯誤訊息。
+     */
+    public function test_clear_returns_503_when_cart_service_cannot_clear_items(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('clearCart')
+            ->once()
+            ->with($member->id)
+            ->andReturn([
+                'status' => 503,
+                'message' => '會員購物車清空失敗，請稍後再試。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        $response = $this->deleteJson('/api/cart/items');
+
+        $response->assertStatus(503)
+            ->assertJson([
+                'message' => '會員購物車清空失敗，請稍後再試。',
+            ])
+            ->assertJsonMissingPath('data');
+    }
+
+    /**
+     * 清空購物車: 不同會員的購物車資料會互相隔離。
+     */
+    public function test_clear_keeps_cart_items_isolated_between_members(): void
+    {
+        $member = Member::factory()->create();
+        $anotherMember = Member::factory()->create();
+        $product = Product::factory()->create();
+        Cache::forget("cart:member:{$member->id}:items");
+        Cache::forget("cart:member:{$anotherMember->id}:items");
+
+        Sanctum::actingAs($member);
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertStatus(201);
+
+        Sanctum::actingAs($anotherMember);
+        $this->postJson('/api/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 5,
+        ])->assertStatus(201);
+
+        Sanctum::actingAs($member);
+        $this->deleteJson('/api/cart/items')->assertOk();
+
+        Sanctum::actingAs($anotherMember);
+        $this->getJson('/api/cart')
+            ->assertOk()
+            ->assertJson([
+                'data' => [
+                    'items' => [
+                        [
+                            'product_id' => $product->id,
+                            'quantity' => 5,
+                        ],
+                    ],
+                    'total_quantity' => 5,
+                ],
+            ]);
+    }
+
+    /**
+     * 清空購物車: 清空購物車會套用 RateLimiter。
+     */
+    public function test_clear_is_rate_limited_for_authenticated_member(): void
+    {
+        $member = Member::factory()->create();
+        Sanctum::actingAs($member);
+
+        $cartService = Mockery::mock(CartService::class);
+        $cartService->shouldReceive('clearCart')
+            ->times(60)
+            ->with($member->id)
+            ->andReturn([
+                'status' => 200,
+                'message' => '購物車已清空。',
+            ]);
+
+        $this->app->instance(CartService::class, $cartService);
+
+        for ($attempt = 0; $attempt < 60; $attempt++) {
+            $this->deleteJson('/api/cart/items')->assertOk();
+        }
+
+        $this->deleteJson('/api/cart/items')->assertStatus(429);
+    }
+
+    /**
      * 模擬指定會員的購物車項目
      *
      * @param \App\Models\Member $member

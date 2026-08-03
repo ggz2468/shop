@@ -791,6 +791,81 @@ class CartStoreTest extends TestCase
     }
 
     /**
+     * 清空購物車：應使用會員購物車 cache key 清除 cache。
+     */
+    public function test_clear_cart_forgets_member_cart_cache_key(): void
+    {
+        $memberId = 1;
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('forget')
+            ->with('cart:member:1:items')
+            ->willReturn(true);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $store->clearCart($memberId);
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * 清空購物車：cache key 不存在時也應視為已清空成功。
+     */
+    public function test_clear_cart_does_not_fail_when_cache_forget_returns_false(): void
+    {
+        $memberId = 1;
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('forget')
+            ->with('cart:member:1:items')
+            ->willReturn(false);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('error');
+
+        $store = new CartStore($cache, $logger);
+
+        $store->clearCart($memberId);
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * 清空購物車：cache 清除發生例外時應記錄錯誤並拋出 RuntimeException。
+     */
+    public function test_clear_cart_logs_error_and_throws_runtime_exception_when_cache_forget_throws_exception(): void
+    {
+        $memberId = 1;
+        $exception = new RuntimeException('cache unavailable');
+
+        $cache = $this->createMock(CacheRepository::class);
+        $cache->expects($this->once())
+            ->method('forget')
+            ->with('cart:member:1:items')
+            ->willThrowException($exception);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with('清空會員購物車失敗', $this->callback(function (array $context) use ($memberId, $exception): bool {
+                return $context['member_id'] === $memberId
+                    && $context['exception'] === $exception;
+            }));
+
+        $store = new CartStore($cache, $logger);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('清空會員購物車失敗');
+
+        $store->clearCart($memberId);
+    }
+
+    /**
      * @return \Carbon\Carbon
      */
     private function cartExpiresAt(): Carbon

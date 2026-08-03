@@ -6,6 +6,7 @@ use App\Services\CartService;
 use App\Stores\CartStore;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class CartServiceTest extends TestCase
 {
@@ -261,6 +262,54 @@ class CartServiceTest extends TestCase
         $this->assertSame([
             'status' => 503,
             'message' => '會員購物車產品刪除失敗，請稍後再試。',
+        ], $result);
+        $this->assertArrayNotHasKey('data', $result);
+    }
+
+    /**
+     * 清空購物車：應將會員 id 交給 CartStore，並回傳成功狀態。
+     */
+    public function test_clear_cart_clears_member_cart_in_cart_store(): void
+    {
+        $memberId = 1;
+
+        $cartStore = Mockery::mock(CartStore::class);
+        $cartStore->shouldReceive('clearCart')
+            ->once()
+            ->with($memberId)
+            ->andReturnNull();
+
+        $service = new CartService($cartStore);
+
+        $result = $service->clearCart($memberId);
+
+        $this->assertSame([
+            'status' => 200,
+            'message' => '購物車已清空。',
+        ], $result);
+        $this->assertArrayNotHasKey('data', $result);
+    }
+
+    /**
+     * 清空購物車：CartStore 清空失敗時應回傳服務不可用狀態。
+     */
+    public function test_clear_cart_returns_503_when_cart_store_fails_to_clear_cart(): void
+    {
+        $memberId = 1;
+
+        $cartStore = Mockery::mock(CartStore::class);
+        $cartStore->shouldReceive('clearCart')
+            ->once()
+            ->with($memberId)
+            ->andThrow(new RuntimeException('清空會員購物車失敗'));
+
+        $service = new CartService($cartStore);
+
+        $result = $service->clearCart($memberId);
+
+        $this->assertSame([
+            'status' => 503,
+            'message' => '會員購物車清空失敗，請稍後再試。',
         ], $result);
         $this->assertArrayNotHasKey('data', $result);
     }
