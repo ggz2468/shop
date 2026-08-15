@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Image;
 use App\Models\Product;
+use App\Models\ProductSpec;
+use App\Models\ProductVariant;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
@@ -35,6 +37,18 @@ class ProductSeeder extends Seeder
                 'name' => $productName,
                 'description' => "這是 {$productName} 的描述。",
             ]);
+
+            ProductSpec::query()
+                ->whereNotIn('id', $product->variants()->pluck('product_spec_id'))
+                ->inRandomOrder()
+                ->limit(2)
+                ->get()
+                ->each(function (ProductSpec $productSpec) use ($product): void {
+                    ProductVariant::factory()->create([
+                        'product_id' => $product->id,
+                        'product_spec_id' => $productSpec->id,
+                    ]);
+                });
 
             Image::factory()->create([
                 'url' => $item['url'],

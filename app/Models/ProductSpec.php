@@ -19,8 +19,8 @@ class ProductSpec extends Model
         'size' => 'integer',
     ];
 
-    public function products(): HasMany
+    public function variants(): HasMany
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(ProductVariant::class);
     }
 }

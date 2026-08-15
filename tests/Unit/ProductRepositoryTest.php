@@ -29,13 +29,11 @@ class ProductRepositoryTest extends TestCase
         $productA = Product::factory()->create([
             'view_counts' => 50,
             'name' => 'A Product',
-            'price' => 100,
             'description' => 'A Desc',
         ]);
         $productB = Product::factory()->create([
             'view_counts' => 50,
             'name' => 'B Product',
-            'price' => 200,
             'description' => 'B Desc',
         ]);
 
@@ -56,18 +54,14 @@ class ProductRepositoryTest extends TestCase
             ->andReturn([
                 "product:{$productB->id}" => [
                     'id' => $productB->id,
-                    'product_spec_id' => $productB->product_spec_id,
                     'name' => 'B Product',
-                    'price' => 200,
                     'description' => 'B Desc',
                     'view_counts' => 50,
                     'image_path' => '/images/products/b.jpg',
                 ],
                 "product:{$productA->id}" => [
                     'id' => $productA->id,
-                    'product_spec_id' => $productA->product_spec_id,
                     'name' => 'A Product',
-                    'price' => 100,
                     'description' => 'A Desc',
                     'view_counts' => 50,
                     'image_path' => '/images/products/a.jpg',
@@ -104,19 +98,16 @@ class ProductRepositoryTest extends TestCase
         $cachedProduct = Product::factory()->create([
             'view_counts' => 300,
             'name' => 'Cached Product',
-            'price' => 1000,
             'description' => 'cached desc',
         ]);
         $dbProductWithImage = Product::factory()->create([
             'view_counts' => 200,
             'name' => 'DB Product With Image',
-            'price' => 900,
             'description' => 'db desc with image',
         ]);
         $dbProductWithoutImage = Product::factory()->create([
             'view_counts' => 200,
             'name' => 'DB Product No Image',
-            'price' => 800,
             'description' => 'db desc no image',
         ]);
 
@@ -143,21 +134,19 @@ class ProductRepositoryTest extends TestCase
         $expectedMissingProducts = [
             "product:{$dbProductWithImage->id}" => [
                 'id' => $dbProductWithImage->id,
-                'product_spec_id' => $dbProductWithImage->product_spec_id,
                 'name' => 'DB Product With Image',
-                'price' => 900,
                 'description' => 'db desc with image',
                 'view_counts' => 200,
                 'image_path' => '/images/products/db-product.jpg',
+                'variants' => $this->variantPayload($dbProductWithImage),
             ],
             "product:{$dbProductWithoutImage->id}" => [
                 'id' => $dbProductWithoutImage->id,
-                'product_spec_id' => $dbProductWithoutImage->product_spec_id,
                 'name' => 'DB Product No Image',
-                'price' => 800,
                 'description' => 'db desc no image',
                 'view_counts' => 200,
                 'image_path' => '/images/products/default.svg',
+                'variants' => $this->variantPayload($dbProductWithoutImage),
             ],
         ];
 
@@ -172,9 +161,7 @@ class ProductRepositoryTest extends TestCase
             ->andReturn([
                 "product:{$cachedProduct->id}" => [
                     'id' => $cachedProduct->id,
-                    'product_spec_id' => $cachedProduct->product_spec_id,
                     'name' => 'Cached Product',
-                    'price' => 1000,
                     'description' => 'cached desc',
                     'view_counts' => 300,
                     'image_path' => '/images/products/cached.jpg',
@@ -218,31 +205,26 @@ class ProductRepositoryTest extends TestCase
         $product1 = Product::factory()->create([
             'view_counts' => 100,
             'name' => 'Product 1',
-            'price' => 100,
             'description' => 'desc 1',
         ]);
         $product2 = Product::factory()->create([
             'view_counts' => 90,
             'name' => 'Product 2',
-            'price' => 200,
             'description' => 'desc 2',
         ]);
         $product3 = Product::factory()->create([
             'view_counts' => 80,
             'name' => 'Product 3',
-            'price' => 300,
             'description' => 'desc 3',
         ]);
         $product4 = Product::factory()->create([
             'view_counts' => 70,
             'name' => 'Product 4',
-            'price' => 400,
             'description' => 'desc 4',
         ]);
         $product5 = Product::factory()->create([
             'view_counts' => 60,
             'name' => 'Product 5',
-            'price' => 500,
             'description' => 'desc 5',
         ]);
 
@@ -265,18 +247,14 @@ class ProductRepositoryTest extends TestCase
             ->andReturn([
                 "product:{$product5->id}" => [
                     'id' => $product5->id,
-                    'product_spec_id' => $product5->product_spec_id,
                     'name' => 'Product 5',
-                    'price' => 500,
                     'description' => 'desc 5',
                     'view_counts' => 60,
                     'image_path' => '/images/products/5.jpg',
                 ],
                 "product:{$product4->id}" => [
                     'id' => $product4->id,
-                    'product_spec_id' => $product4->product_spec_id,
                     'name' => 'Product 4',
-                    'price' => 400,
                     'description' => 'desc 4',
                     'view_counts' => 70,
                     'image_path' => '/images/products/4.jpg',
@@ -354,7 +332,6 @@ class ProductRepositoryTest extends TestCase
         $existingProduct = Product::factory()->create([
             'view_counts' => 20,
             'name' => 'Existing Product',
-            'price' => 300,
             'description' => 'existing desc',
         ]);
 
@@ -378,12 +355,11 @@ class ProductRepositoryTest extends TestCase
             ->with([
                 "product:{$existingProduct->id}" => [
                     'id' => $existingProduct->id,
-                    'product_spec_id' => $existingProduct->product_spec_id,
                     'name' => 'Existing Product',
-                    'price' => 300,
                     'description' => 'existing desc',
                     'view_counts' => 20,
                     'image_path' => '/images/products/default.svg',
+                    'variants' => $this->variantPayload($existingProduct),
                 ],
             ], 3600);
 
@@ -414,13 +390,11 @@ class ProductRepositoryTest extends TestCase
         $popularProduct = Product::factory()->create([
             'view_counts' => 120,
             'name' => 'Popular Product',
-            'price' => 900,
             'description' => 'popular desc',
         ]);
         $normalProduct = Product::factory()->create([
             'view_counts' => 50,
             'name' => 'Normal Product',
-            'price' => 700,
             'description' => 'normal desc',
         ]);
 
@@ -472,5 +446,28 @@ class ProductRepositoryTest extends TestCase
 
         $this->assertSame(2, $result['total_row_counts']);
         $this->assertSame([$popularProduct->id, $normalProduct->id], array_column($result['products'], 'id'));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function variantPayload(Product $product): array
+    {
+        return $product->variants()
+            ->with('productSpec')
+            ->get()
+            ->map(fn ($variant) => [
+                'id' => $variant->id,
+                'product_spec_id' => $variant->product_spec_id,
+                'sku' => $variant->sku,
+                'price' => $variant->price,
+                'stock_quantity' => $variant->stock_quantity,
+                'spec' => [
+                    'color' => $variant->productSpec->color,
+                    'size' => $variant->productSpec->size,
+                ],
+            ])
+            ->values()
+            ->all();
     }
 }

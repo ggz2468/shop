@@ -39,7 +39,7 @@ class CartStoreTest extends TestCase
         $memberId = 1;
         $cartItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
         ];
@@ -110,12 +110,12 @@ class CartStoreTest extends TestCase
         $quantity = 2;
         $existingItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 1,
             ],
         ];
         $storedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
         $expectedItems = [
@@ -150,7 +150,7 @@ class CartStoreTest extends TestCase
         $productId = 10;
         $quantity = 2;
         $storedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
 
@@ -182,25 +182,25 @@ class CartStoreTest extends TestCase
         $quantity = 2;
         $existingItems = [
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 1,
             ],
             [
-                'product_id' => 20,
+                'product_variant_id' => 20,
                 'quantity' => 4,
             ],
         ];
         $storedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
         $expectedItems = [
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 3,
             ],
             [
-                'product_id' => 20,
+                'product_variant_id' => 20,
                 'quantity' => 4,
             ],
         ];
@@ -232,7 +232,7 @@ class CartStoreTest extends TestCase
         $productId = 10;
         $quantity = 2;
         $storedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
 
@@ -250,7 +250,7 @@ class CartStoreTest extends TestCase
             ->method('error')
             ->with('產品加入會員購物車失敗', $this->callback(function (array $context) use ($memberId, $productId, $quantity): bool {
                 return $context['member_id'] === $memberId
-                    && $context['product_id'] === $productId
+                    && $context['product_variant_id'] === $productId
                     && $context['quantity'] === $quantity
                     && $context['exception'] instanceof RuntimeException;
             }));
@@ -271,7 +271,7 @@ class CartStoreTest extends TestCase
         $productId = 10;
         $quantity = 2;
         $storedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
         $exception = new RuntimeException('cache unavailable');
@@ -290,7 +290,7 @@ class CartStoreTest extends TestCase
             ->method('error')
             ->with('產品加入會員購物車失敗', $this->callback(function (array $context) use ($memberId, $productId, $quantity, $exception): bool {
                 return $context['member_id'] === $memberId
-                    && $context['product_id'] === $productId
+                    && $context['product_variant_id'] === $productId
                     && $context['quantity'] === $quantity
                     && $context['exception'] === $exception;
             }));
@@ -311,7 +311,7 @@ class CartStoreTest extends TestCase
         $productId = 10;
         $quantity = 2;
         $storedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
 
@@ -345,30 +345,30 @@ class CartStoreTest extends TestCase
         $quantity = 5;
         $existingItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 1,
             ],
             [
-                'product_id' => 20,
+                'product_variant_id' => 20,
                 'quantity' => 4,
             ],
         ];
         $updatedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
         $expectedItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
             $updatedItem,
             [
-                'product_id' => 20,
+                'product_variant_id' => 20,
                 'quantity' => 4,
             ],
         ];
@@ -403,7 +403,7 @@ class CartStoreTest extends TestCase
         $quantity = 5;
         $existingItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
         ];
@@ -463,12 +463,12 @@ class CartStoreTest extends TestCase
         $quantity = 5;
         $existingItems = [
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 1,
             ],
         ];
         $updatedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
 
@@ -486,7 +486,7 @@ class CartStoreTest extends TestCase
             ->method('error')
             ->with('更新會員購物車中指定產品的數量失敗', $this->callback(function (array $context) use ($memberId, $productId, $quantity): bool {
                 return $context['member_id'] === $memberId
-                    && $context['product_id'] === $productId
+                    && $context['product_variant_id'] === $productId
                     && $context['quantity'] === $quantity
                     && $context['exception'] instanceof RuntimeException;
             }));
@@ -508,12 +508,12 @@ class CartStoreTest extends TestCase
         $quantity = 5;
         $existingItems = [
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 1,
             ],
         ];
         $updatedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
         $exception = new RuntimeException('cache unavailable');
@@ -532,7 +532,7 @@ class CartStoreTest extends TestCase
             ->method('error')
             ->with('更新會員購物車中指定產品的數量失敗', $this->callback(function (array $context) use ($memberId, $productId, $quantity, $exception): bool {
                 return $context['member_id'] === $memberId
-                    && $context['product_id'] === $productId
+                    && $context['product_variant_id'] === $productId
                     && $context['quantity'] === $quantity
                     && $context['exception'] === $exception;
             }));
@@ -553,28 +553,28 @@ class CartStoreTest extends TestCase
         $productId = 10;
         $existingItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 1,
             ],
             [
-                'product_id' => 20,
+                'product_variant_id' => 20,
                 'quantity' => 4,
             ],
         ];
         $destroyedItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
         ];
         $expectedItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
             [
-                'product_id' => 20,
+                'product_variant_id' => 20,
                 'quantity' => 4,
             ],
         ];
@@ -608,25 +608,25 @@ class CartStoreTest extends TestCase
         $productId = 20;
         $existingItems = [
             [
-                'product_id' => 10,
+                'product_variant_id' => 10,
                 'quantity' => 1,
             ],
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 2,
             ],
             [
-                'product_id' => 30,
+                'product_variant_id' => 30,
                 'quantity' => 3,
             ],
         ];
         $expectedItems = [
             [
-                'product_id' => 10,
+                'product_variant_id' => 10,
                 'quantity' => 1,
             ],
             [
-                'product_id' => 30,
+                'product_variant_id' => 30,
                 'quantity' => 3,
             ],
         ];
@@ -649,7 +649,7 @@ class CartStoreTest extends TestCase
         $result = $store->destroyItem($memberId, $productId);
 
         $this->assertSame([
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
         ], $result);
     }
 
@@ -662,7 +662,7 @@ class CartStoreTest extends TestCase
         $productId = 10;
         $existingItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
         ];
@@ -720,7 +720,7 @@ class CartStoreTest extends TestCase
         $productId = 10;
         $existingItems = [
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 1,
             ],
         ];
@@ -739,7 +739,7 @@ class CartStoreTest extends TestCase
             ->method('error')
             ->with('刪除會員購物車中指定的產品失敗', $this->callback(function (array $context) use ($memberId, $productId): bool {
                 return $context['member_id'] === $memberId
-                    && $context['product_id'] === $productId
+                    && $context['product_variant_id'] === $productId
                     && $context['exception'] instanceof RuntimeException;
             }));
 
@@ -759,7 +759,7 @@ class CartStoreTest extends TestCase
         $productId = 10;
         $existingItems = [
             [
-                'product_id' => $productId,
+                'product_variant_id' => $productId,
                 'quantity' => 1,
             ],
         ];
@@ -779,7 +779,7 @@ class CartStoreTest extends TestCase
             ->method('error')
             ->with('刪除會員購物車中指定的產品失敗', $this->callback(function (array $context) use ($memberId, $productId, $exception): bool {
                 return $context['member_id'] === $memberId
-                    && $context['product_id'] === $productId
+                    && $context['product_variant_id'] === $productId
                     && $context['exception'] === $exception;
             }));
 

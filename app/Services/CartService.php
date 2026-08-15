@@ -34,13 +34,13 @@ class CartService
      * 將產品加入會員購物車
      *
      * @param int $memberId
-     * @param int $productId
+     * @param int $productVariantId
      * @param int $quantity
      * @return array<string, mixed>
      */
-    public function storeCartItem(int $memberId, int $productId, int $quantity): array
+    public function storeCartItem(int $memberId, int $productVariantId, int $quantity): array
     {
-        $storedItemInfo = $this->cartStore->storeItem($memberId, $productId, $quantity);
+        $storedItemInfo = $this->cartStore->storeItem($memberId, $productVariantId, $quantity);
 
         if ($storedItemInfo === false) {
             return [
@@ -60,13 +60,13 @@ class CartService
      * 更新會員購物車中指定產品的數量
      * 
      * @param int $memberId
-     * @param int $productId
+     * @param int $productVariantId
      * @param int $quantity
      * @return array<string, mixed>
      */
-    public function updateCartItem(int $memberId, int $productId, int $quantity): array
+    public function updateCartItem(int $memberId, int $productVariantId, int $quantity): array
     {
-        $updatedItemInfo = $this->cartStore->updateItem($memberId, $productId, $quantity);
+        $updatedItemInfo = $this->cartStore->updateItem($memberId, $productVariantId, $quantity);
 
         if ($updatedItemInfo === false) {
             return [
@@ -93,12 +93,12 @@ class CartService
      * 刪除會員購物車中指定的產品
      * 
      * @param int $memberId
-     * @param int $productId
+     * @param int $productVariantId
      * @return array<string, mixed>
      */
-    public function destroyCartItem(int $memberId, int $productId): array
+    public function destroyCartItem(int $memberId, int $productVariantId): array
     {
-        $destroyedItemInfo = $this->cartStore->destroyItem($memberId, $productId);
+        $destroyedItemInfo = $this->cartStore->destroyItem($memberId, $productVariantId);
 
         if ($destroyedItemInfo === false) {
             return [

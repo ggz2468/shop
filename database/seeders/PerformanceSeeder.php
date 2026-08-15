@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Image;
 use App\Models\Member;
 use App\Models\Product;
-use App\Models\ProductSpec;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Seeder;
 
@@ -22,7 +21,6 @@ class PerformanceSeeder extends Seeder
 
         $this->call(ProductSpecSeeder::class);
 
-        $specIds = ProductSpec::query()->pluck('id')->all();
         $names = array_values(array_unique(ProductFactory::names()));
 
         if (empty($names)) {
@@ -34,12 +32,11 @@ class PerformanceSeeder extends Seeder
 
             $products = Product::factory()
                 ->count($currentBatchSize)
-                ->sequence(function ($sequence) use ($offset, $names, $specIds): array {
+                ->sequence(function ($sequence) use ($offset, $names): array {
                     $index = $offset + $sequence->index;
                     $baseName = $names[$index % count($names)];
 
                     return [
-                        'product_spec_id' => $specIds[$index % count($specIds)],
                         'name' => sprintf('%s 壓測#%d', $baseName, $index + 1),
                         'description' => sprintf('壓力測試資料: %s (%d)', $baseName, $index + 1),
                     ];

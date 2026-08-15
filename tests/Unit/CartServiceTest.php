@@ -28,11 +28,11 @@ class CartServiceTest extends TestCase
         $memberId = 1;
         $cartItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
             [
-                'product_id' => 2,
+                'product_variant_id' => 2,
                 'quantity' => 1,
             ],
         ];
@@ -59,7 +59,7 @@ class CartServiceTest extends TestCase
         $productId = 10;
         $quantity = 2;
         $cartItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
 
@@ -115,7 +115,7 @@ class CartServiceTest extends TestCase
         $productId = 10;
         $quantity = 3;
         $cartItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
             'quantity' => $quantity,
         ];
 
@@ -196,7 +196,7 @@ class CartServiceTest extends TestCase
         $memberId = 1;
         $productId = 10;
         $cartItem = [
-            'product_id' => $productId,
+            'product_variant_id' => $productId,
         ];
 
         $cartStore = Mockery::mock(CartStore::class);

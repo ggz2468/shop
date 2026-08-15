@@ -45,7 +45,7 @@ class ProductService
      */
     public function getProductData(Product $product)
     {
-        $cacheKey = "product:{$product->id}";
+        $cacheKey = ProductRepository::cacheKey($product->id);
         $productCache = $this->cache->tags(['products']);
 
         // 將儲存於 Redis 中的產品被瀏覽次數遞增
@@ -56,15 +56,24 @@ class ProductService
             return $productCache->get($cacheKey);
         }
 
-        $product->load('images');
+        $product->load(['images', 'variants.productSpec']);
         $productData = [
             'id' => $product->id,
-            'product_spec_id' => $product->product_spec_id,
             'name' => $product->name,
-            'price' => $product->price,
             'description' => $product->description,
             'view_counts' => $product->view_counts,
-            'image_path' => $product->images->first()?->url ?? '/images/products/default.svg'
+            'image_path' => $product->images->first()?->url ?? '/images/products/default.svg',
+            'variants' => $product->variants->map(fn ($variant) => [
+                'id' => $variant->id,
+                'product_spec_id' => $variant->product_spec_id,
+                'sku' => $variant->sku,
+                'price' => $variant->price,
+                'stock_quantity' => $variant->stock_quantity,
+                'spec' => [
+                    'color' => $variant->productSpec->color,
+                    'size' => $variant->productSpec->size,
+                ],
+            ])->values()->all(),
         ];
 
         // 將產品資料存入 Cache 中，並設定過期時間為 1 小時

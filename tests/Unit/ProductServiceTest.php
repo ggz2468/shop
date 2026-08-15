@@ -96,12 +96,11 @@ class ProductServiceTest extends TestCase
 
         $cachedData = [
             'id' => 9,
-            'product_spec_id' => 4,
             'name' => 'Cached Product',
-            'price' => 999,
             'description' => 'from cache',
             'view_counts' => 777,
             'image_path' => '/images/products/cached.jpg',
+            'variants' => [],
         ];
 
         $redisManager = Mockery::mock(RedisManager::class);
@@ -151,21 +150,33 @@ class ProductServiceTest extends TestCase
             }
         };
         $product->id = 11;
-        $product->product_spec_id = 7;
         $product->name = 'Fresh Product';
-        $product->price = 1234;
         $product->description = 'fresh from db';
         $product->view_counts = 88;
         $product->setRelation('images', new Collection([(object) ['url' => '/images/products/fresh.jpg']]));
+        $product->setRelation('variants', new Collection([(object) [
+            'id' => 17,
+            'product_spec_id' => 7,
+            'sku' => 'FRESH-BLUE-M',
+            'price' => 1234,
+            'stock_quantity' => 8,
+            'productSpec' => (object) ['color' => '藍', 'size' => 3],
+        ]]));
 
         $expectedData = [
             'id' => 11,
-            'product_spec_id' => 7,
             'name' => 'Fresh Product',
-            'price' => 1234,
             'description' => 'fresh from db',
             'view_counts' => 88,
             'image_path' => '/images/products/fresh.jpg',
+            'variants' => [[
+                'id' => 17,
+                'product_spec_id' => 7,
+                'sku' => 'FRESH-BLUE-M',
+                'price' => 1234,
+                'stock_quantity' => 8,
+                'spec' => ['color' => '藍', 'size' => 3],
+            ]],
         ];
 
         $redisManager = Mockery::mock(RedisManager::class);
@@ -214,21 +225,33 @@ class ProductServiceTest extends TestCase
             }
         };
         $product->id = 21;
-        $product->product_spec_id = 9;
         $product->name = 'No Image Product';
-        $product->price = 567;
         $product->description = 'no images';
         $product->view_counts = 5;
         $product->setRelation('images', new Collection());
+        $product->setRelation('variants', new Collection([(object) [
+            'id' => 29,
+            'product_spec_id' => 9,
+            'sku' => 'NO-IMAGE-WHITE-S',
+            'price' => 567,
+            'stock_quantity' => 3,
+            'productSpec' => (object) ['color' => '白', 'size' => 1],
+        ]]));
 
         $expectedData = [
             'id' => 21,
-            'product_spec_id' => 9,
             'name' => 'No Image Product',
-            'price' => 567,
             'description' => 'no images',
             'view_counts' => 5,
             'image_path' => '/images/products/default.svg',
+            'variants' => [[
+                'id' => 29,
+                'product_spec_id' => 9,
+                'sku' => 'NO-IMAGE-WHITE-S',
+                'price' => 567,
+                'stock_quantity' => 3,
+                'spec' => ['color' => '白', 'size' => 1],
+            ]],
         ];
 
         $redisManager = Mockery::mock(RedisManager::class);

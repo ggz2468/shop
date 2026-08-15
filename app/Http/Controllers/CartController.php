@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\CartService;
-use App\Models\Product;
+use App\Models\ProductVariant;
 
 class CartController extends Controller
 {
@@ -48,11 +48,11 @@ class CartController extends Controller
     {
         // 資料格式驗證
         $validated = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        $result = $this->cartService->storeCartItem($request->user()->id, $validated['product_id'], $validated['quantity']);
+        $result = $this->cartService->storeCartItem($request->user()->id, $validated['product_variant_id'], $validated['quantity']);
 
         return response()->json([
             'message' => $result['message'],
@@ -64,17 +64,17 @@ class CartController extends Controller
      * 更新購物車中指定產品的數量
      * 
      * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Product $product
+     * @param \App\Models\ProductVariant $productVariant
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateItem(Request $request, Product $product)
+    public function updateItem(Request $request, ProductVariant $productVariant)
     {
         // 資料格式驗證
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        $result = $this->cartService->updateCartItem($request->user()->id, $product->id, $validated['quantity']);
+        $result = $this->cartService->updateCartItem($request->user()->id, $productVariant->id, $validated['quantity']);
 
         return response()->json([
             'message' => $result['message'],
@@ -86,12 +86,12 @@ class CartController extends Controller
      * 刪除購物車中指定的產品
      * 
      * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Product $product
+     * @param \App\Models\ProductVariant $productVariant
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroyItem(Request $request, Product $product)
+    public function destroyItem(Request $request, ProductVariant $productVariant)
     {
-        $result = $this->cartService->destroyCartItem($request->user()->id, $product->id);
+        $result = $this->cartService->destroyCartItem($request->user()->id, $productVariant->id);
 
         return response()->json([
             'message' => $result['message'],

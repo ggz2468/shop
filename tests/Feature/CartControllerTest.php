@@ -42,7 +42,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         '*' => [
-                            'product_id',
+                            'product_variant_id',
                             'quantity',
                         ],
                     ],
@@ -68,11 +68,11 @@ class CartControllerTest extends TestCase
         // 模擬購物車中有產品
         $cartItems = [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
             [
-                'product_id' => 2,
+                'product_variant_id' => 2,
                 'quantity' => 1,
             ],
         ];
@@ -86,7 +86,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         '*' => [
-                            'product_id',
+                            'product_variant_id',
                             'quantity',
                         ],
                     ],
@@ -126,7 +126,7 @@ class CartControllerTest extends TestCase
 
         $this->mockCartItemsForMember($member, [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
         ]);
@@ -138,7 +138,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         '*' => [
-                            'product_id',
+                            'product_variant_id',
                             'quantity',
                         ],
                     ],
@@ -157,15 +157,15 @@ class CartControllerTest extends TestCase
 
         $this->mockCartItemsForMember($member, [
             [
-                'product_id' => 1,
+                'product_variant_id' => 1,
                 'quantity' => 2,
             ],
             [
-                'product_id' => 2,
+                'product_variant_id' => 2,
                 'quantity' => 5,
             ],
             [
-                'product_id' => 3,
+                'product_variant_id' => 3,
                 'quantity' => 1,
             ],
         ]);
@@ -209,7 +209,7 @@ class CartControllerTest extends TestCase
     public function test_guest_cannot_add_product_to_cart(): void
     {
         $response = $this->postJson('/api/cart/items', [
-            'product_id' => 1,
+            'product_variant_id' => 1,
             'quantity' => 1,
         ]);
 
@@ -232,7 +232,7 @@ class CartControllerTest extends TestCase
         $response = $this->postJson('/api/cart/items', []);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['product_id', 'quantity']);
+            ->assertJsonValidationErrors(['product_variant_id', 'quantity']);
     }
 
     /**
@@ -249,12 +249,12 @@ class CartControllerTest extends TestCase
         $this->app->instance(CartService::class, $cartService);
 
         $response = $this->postJson('/api/cart/items', [
-            'product_id' => 999,
+            'product_variant_id' => 999,
             'quantity' => 1,
         ]);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['product_id']);
+            ->assertJsonValidationErrors(['product_variant_id']);
     }
 
     /**
@@ -271,12 +271,12 @@ class CartControllerTest extends TestCase
         $this->app->instance(CartService::class, $cartService);
 
         $response = $this->postJson('/api/cart/items', [
-            'product_id' => 'abc',
+            'product_variant_id' => 'abc',
             'quantity' => 1,
         ]);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['product_id']);
+            ->assertJsonValidationErrors(['product_variant_id']);
     }
 
     /**
@@ -295,7 +295,7 @@ class CartControllerTest extends TestCase
 
         foreach ([0, -1, 'abc'] as $quantity) {
             $response = $this->postJson('/api/cart/items', [
-                'product_id' => $product->id,
+                'product_variant_id' => $product->id,
                 'quantity' => $quantity,
             ]);
 
@@ -321,7 +321,7 @@ class CartControllerTest extends TestCase
                 'status' => 201,
                 'message' => '產品已加入購物車。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                     'quantity' => 2,
                 ],
             ]);
@@ -329,7 +329,7 @@ class CartControllerTest extends TestCase
         $this->app->instance(CartService::class, $cartService);
 
         $response = $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 2,
         ]);
 
@@ -337,7 +337,7 @@ class CartControllerTest extends TestCase
             ->assertJson([
                 'message' => '產品已加入購物車。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                     'quantity' => 2,
                 ],
             ]);
@@ -354,13 +354,13 @@ class CartControllerTest extends TestCase
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 2,
         ])->assertStatus(201)
             ->assertJson([
                 'message' => '產品已加入購物車。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                     'quantity' => 2,
                 ],
             ]);
@@ -371,7 +371,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         [
-                            'product_id' => $product->id,
+                            'product_variant_id' => $product->id,
                             'quantity' => 2,
                         ],
                     ],
@@ -393,7 +393,7 @@ class CartControllerTest extends TestCase
 
         Sanctum::actingAs($member);
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 2,
         ])->assertStatus(201);
 
@@ -419,12 +419,12 @@ class CartControllerTest extends TestCase
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 1,
         ])->assertStatus(201);
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 2,
         ])->assertStatus(201);
 
@@ -434,7 +434,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         [
-                            'product_id' => $product->id,
+                            'product_variant_id' => $product->id,
                             'quantity' => 3,
                         ],
                     ],
@@ -464,7 +464,7 @@ class CartControllerTest extends TestCase
         $this->app->instance(CartService::class, $cartService);
 
         $response = $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 3,
         ]);
 
@@ -495,7 +495,7 @@ class CartControllerTest extends TestCase
         $this->app->instance(CartService::class, $cartService);
 
         $response = $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 1,
         ]);
 
@@ -528,13 +528,13 @@ class CartControllerTest extends TestCase
 
         for ($attempt = 0; $attempt < 60; $attempt++) {
             $this->postJson('/api/cart/items', [
-                'product_id' => $product->id,
+                'product_variant_id' => $product->id,
                 'quantity' => 1,
             ])->assertStatus(201);
         }
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 1,
         ])->assertStatus(429);
     }
@@ -634,7 +634,7 @@ class CartControllerTest extends TestCase
                 'status' => 200,
                 'message' => '購物車產品數量已更新。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                     'quantity' => 3,
                 ],
             ]);
@@ -649,7 +649,7 @@ class CartControllerTest extends TestCase
             ->assertJson([
                 'message' => '購物車產品數量已更新。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                     'quantity' => 3,
                 ],
             ]);
@@ -666,7 +666,7 @@ class CartControllerTest extends TestCase
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 1,
         ])->assertStatus(201);
 
@@ -676,7 +676,7 @@ class CartControllerTest extends TestCase
             ->assertJson([
                 'message' => '購物車產品數量已更新。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                     'quantity' => 4,
                 ],
             ]);
@@ -687,7 +687,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         [
-                            'product_id' => $product->id,
+                            'product_variant_id' => $product->id,
                             'quantity' => 4,
                         ],
                     ],
@@ -792,13 +792,13 @@ class CartControllerTest extends TestCase
 
         Sanctum::actingAs($member);
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 1,
         ])->assertStatus(201);
 
         Sanctum::actingAs($anotherMember);
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 5,
         ])->assertStatus(201);
 
@@ -814,7 +814,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         [
-                            'product_id' => $product->id,
+                            'product_variant_id' => $product->id,
                             'quantity' => 5,
                         ],
                     ],
@@ -901,7 +901,7 @@ class CartControllerTest extends TestCase
                 'status' => 200,
                 'message' => '購物車產品已刪除。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                 ],
             ]);
 
@@ -913,7 +913,7 @@ class CartControllerTest extends TestCase
             ->assertJson([
                 'message' => '購物車產品已刪除。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                 ],
             ]);
     }
@@ -930,12 +930,12 @@ class CartControllerTest extends TestCase
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 2,
         ])->assertStatus(201);
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $remainingProduct->id,
+            'product_variant_id' => $remainingProduct->id,
             'quantity' => 3,
         ])->assertStatus(201);
 
@@ -944,7 +944,7 @@ class CartControllerTest extends TestCase
             ->assertJson([
                 'message' => '購物車產品已刪除。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                 ],
             ]);
 
@@ -954,7 +954,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         [
-                            'product_id' => $remainingProduct->id,
+                            'product_variant_id' => $remainingProduct->id,
                             'quantity' => 3,
                         ],
                     ],
@@ -962,7 +962,7 @@ class CartControllerTest extends TestCase
                 ],
             ])
             ->assertJsonMissing([
-                'product_id' => $product->id,
+                'product_variant_id' => $product->id,
                 'quantity' => 2,
             ]);
     }
@@ -978,7 +978,7 @@ class CartControllerTest extends TestCase
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 2,
         ])->assertStatus(201);
 
@@ -987,7 +987,7 @@ class CartControllerTest extends TestCase
             ->assertJson([
                 'message' => '購物車產品已刪除。',
                 'data' => [
-                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id,
                 ],
             ]);
 
@@ -1091,13 +1091,13 @@ class CartControllerTest extends TestCase
 
         Sanctum::actingAs($member);
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 1,
         ])->assertStatus(201);
 
         Sanctum::actingAs($anotherMember);
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 5,
         ])->assertStatus(201);
 
@@ -1111,7 +1111,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         [
-                            'product_id' => $product->id,
+                            'product_variant_id' => $product->id,
                             'quantity' => 5,
                         ],
                     ],
@@ -1197,12 +1197,12 @@ class CartControllerTest extends TestCase
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 2,
         ])->assertStatus(201);
 
         $this->postJson('/api/cart/items', [
-            'product_id' => $anotherProduct->id,
+            'product_variant_id' => $anotherProduct->id,
             'quantity' => 3,
         ])->assertStatus(201);
 
@@ -1282,13 +1282,13 @@ class CartControllerTest extends TestCase
 
         Sanctum::actingAs($member);
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 1,
         ])->assertStatus(201);
 
         Sanctum::actingAs($anotherMember);
         $this->postJson('/api/cart/items', [
-            'product_id' => $product->id,
+            'product_variant_id' => $product->id,
             'quantity' => 5,
         ])->assertStatus(201);
 
@@ -1302,7 +1302,7 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'items' => [
                         [
-                            'product_id' => $product->id,
+                            'product_variant_id' => $product->id,
                             'quantity' => 5,
                         ],
                     ],

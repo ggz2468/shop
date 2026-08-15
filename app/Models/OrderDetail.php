@@ -14,7 +14,7 @@ class OrderDetail extends Model
 
     protected $fillable = [
         'order_id',
-        'product_id',
+        'product_variant_id',
         'product_name',
         'product_price',
         'quantity',
@@ -23,7 +23,7 @@ class OrderDetail extends Model
 
     protected $casts = [
         'order_id' => 'integer',
-        'product_id' => 'integer',
+        'product_variant_id' => 'integer',
         'product_price' => 'integer',
         'quantity' => 'integer',
         'subtotal' => 'integer',
@@ -34,8 +34,8 @@ class OrderDetail extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function product(): BelongsTo
+    public function productVariant(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class);
     }
 }

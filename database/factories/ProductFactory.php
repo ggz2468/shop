@@ -3,7 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\ProductSpec;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -11,6 +12,16 @@ use Illuminate\Support\Facades\Storage;
  */
 class ProductFactory extends Factory
 {
+    /**
+     * Configure the model factory.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Product $product): void {
+            ProductVariant::factory()->create(['product_id' => $product->id]);
+        });
+    }
+
     /**
      * 產品預設圖片 URL
      * 
@@ -62,9 +73,7 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            'product_spec_id' => ProductSpec::factory(),
             'name' => self::fallbackName(),
-            'price' => $this->faker->numberBetween(100, 1000),
             'description' => $this->faker->sentence(),
             'created_at' => now(),
             'updated_at' => now()

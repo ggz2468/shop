@@ -8,6 +8,15 @@ use App\Models\Product;
 class ProductRepository extends Repository
 {
     /**
+     * @param int $productId
+     * @return string
+     */
+    public static function cacheKey(int $productId): string
+    {
+        return "product:{$productId}";
+    }
+
+    /**
      * 預設排序欄位
      * 
      * @var string
@@ -62,14 +71,14 @@ class ProductRepository extends Repository
         // 取得產品編號
         $productIdsCacheKey = "product_ids:page:{$page}:row_counts_per_page:{$rowCountsPerPage}";
         $productIds = $this->cache->tags(['products_index'])->remember($productIdsCacheKey, 3600, function () use ($rowCountsPerPage, $page) {
-            $paginator = $this->paginate([], ['images'], [[self::DEFAULT_SORT_FIELD, self::DEFAULT_SORT_DIRECTION], ['id', 'asc']], $rowCountsPerPage, $page);
+            $paginator = $this->paginate([], ['images', 'variants.productSpec'], [[self::DEFAULT_SORT_FIELD, self::DEFAULT_SORT_DIRECTION], ['id', 'asc']], $rowCountsPerPage, $page);
             return collect($paginator->items())
                 ->pluck('id')
                 ->all();
         });
 
         // 將產品編號組合成 Cache key
-        $cacheKeys = array_map(fn ($id) => "product:{$id}", $productIds);
+        $cacheKeys = array_map(fn ($id) => self::cacheKey($id), $productIds);
 
         // 取得存在 Cache 中的產品資料
         $products = $this->cache->tags(['products'])->many($cacheKeys);
@@ -80,18 +89,27 @@ class ProductRepository extends Repository
         );
 
         // 取得不存在於 Cache 中的產品資料
-        $missingProducts = $this->modelClassName::with('images')
+        $missingProducts = $this->modelClassName::with(['images', 'variants.productSpec'])
             ->whereIn('id', $missingProductIds)
             ->get()
             ->mapWithKeys(fn ($product) => [
-                "product:{$product->id}" => [
+                self::cacheKey($product->id) => [
                     'id' => $product->id,
-                    'product_spec_id' => $product->product_spec_id,
                     'name' => $product->name,
-                    'price' => $product->price,
                     'description' => $product->description,
                     'view_counts' => $product->view_counts,
                     'image_path' => $product->images->first()?->url ?? '/images/products/default.svg',
+                    'variants' => $product->variants->map(fn ($variant) => [
+                        'id' => $variant->id,
+                        'product_spec_id' => $variant->product_spec_id,
+                        'sku' => $variant->sku,
+                        'price' => $variant->price,
+                        'stock_quantity' => $variant->stock_quantity,
+                        'spec' => [
+                            'color' => $variant->productSpec->color,
+                            'size' => $variant->productSpec->size,
+                        ],
+                    ])->values()->all(),
                 ],
             ])
             ->all();
