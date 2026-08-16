@@ -16,12 +16,12 @@ class Order extends Model
     protected $fillable = [
         'member_id',
         'number',
+        'idempotency_key',
         'total_amount',
         'tax_amount',
         'shipping_fee',
         'status',
         'payment_method',
-        'is_paid',
     ];
 
     protected $casts = [
@@ -31,7 +31,6 @@ class Order extends Model
         'shipping_fee' => 'integer',
         'status' => 'integer',
         'payment_method' => 'integer',
-        'is_paid' => 'integer',
     ];
 
     public function member(): BelongsTo
