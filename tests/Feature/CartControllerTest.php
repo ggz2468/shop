@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Member;
-use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Services\CartService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -286,7 +286,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('storeCartItem')->never();
@@ -311,7 +311,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('storeCartItem')
@@ -350,7 +350,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
@@ -387,7 +387,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         $anotherMember = Member::factory()->create();
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
         Cache::forget("cart:member:{$anotherMember->id}:items");
 
@@ -415,7 +415,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
@@ -450,7 +450,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('storeCartItem')
@@ -481,7 +481,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('storeCartItem')
@@ -513,7 +513,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('storeCartItem')
@@ -544,7 +544,7 @@ class CartControllerTest extends TestCase
      */
     public function test_guest_cannot_update_cart_item_quantity(): void
     {
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $response = $this->patchJson("/api/cart/items/{$product->id}", [
             'quantity' => 2,
@@ -560,7 +560,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('updateCartItem')->never();
@@ -580,7 +580,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('updateCartItem')->never();
@@ -624,7 +624,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('updateCartItem')
@@ -662,7 +662,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
@@ -703,7 +703,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
 
         $response = $this->patchJson("/api/cart/items/{$product->id}", [
@@ -724,7 +724,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('updateCartItem')
@@ -755,7 +755,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('updateCartItem')
@@ -786,7 +786,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         $anotherMember = Member::factory()->create();
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
         Cache::forget("cart:member:{$anotherMember->id}:items");
 
@@ -830,7 +830,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('updateCartItem')
@@ -859,7 +859,7 @@ class CartControllerTest extends TestCase
      */
     public function test_guest_cannot_delete_cart_item(): void
     {
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $response = $this->deleteJson("/api/cart/items/{$product->id}");
 
@@ -891,7 +891,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('destroyCartItem')
@@ -925,8 +925,8 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
-        $remainingProduct = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
+        $remainingProduct = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
@@ -974,7 +974,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
@@ -1008,7 +1008,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
 
         $response = $this->deleteJson("/api/cart/items/{$product->id}");
@@ -1027,7 +1027,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('destroyCartItem')
@@ -1056,7 +1056,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('destroyCartItem')
@@ -1085,7 +1085,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         $anotherMember = Member::factory()->create();
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
         Cache::forget("cart:member:{$anotherMember->id}:items");
 
@@ -1127,7 +1127,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
 
         $cartService = Mockery::mock(CartService::class);
         $cartService->shouldReceive('destroyCartItem')
@@ -1192,8 +1192,8 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         Sanctum::actingAs($member);
-        $product = Product::factory()->create();
-        $anotherProduct = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
+        $anotherProduct = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
 
         $this->postJson('/api/cart/items', [
@@ -1276,7 +1276,7 @@ class CartControllerTest extends TestCase
     {
         $member = Member::factory()->create();
         $anotherMember = Member::factory()->create();
-        $product = Product::factory()->create();
+        $product = ProductVariant::factory()->create();
         Cache::forget("cart:member:{$member->id}:items");
         Cache::forget("cart:member:{$anotherMember->id}:items");
 
