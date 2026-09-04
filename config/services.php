@@ -43,4 +43,14 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', 'http://localhost'),
 
+    // 綠界金流
+    'ecpay' => [
+        'merchant_id' => env('ECPAY_MERCHANT_ID'),
+        'hash_key' => env('ECPAY_HASH_KEY'),
+        'hash_iv' => env('ECPAY_HASH_IV'),
+        'payment_action_url' => env('ECPAY_PAYMENT_ACTION_URL'),
+        'return_url' => env('ECPAY_RETURN_URL'),
+        'client_back_url' => env('ECPAY_CLIENT_BACK_URL'),
+    ],
+
 ];

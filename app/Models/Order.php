@@ -22,6 +22,7 @@ class Order extends Model
         'shipping_fee',
         'status',
         'payment_method',
+        'payment_status',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class Order extends Model
         'shipping_fee' => 'integer',
         'status' => 'integer',
         'payment_method' => 'integer',
+        'payment_status' => 'integer',
     ];
 
     public function member(): BelongsTo
@@ -41,5 +43,15 @@ class Order extends Model
     public function orderDetails(): HasMany
     {
         return $this->hasMany(OrderDetail::class);
+    }
+
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class);
     }
 }

@@ -16,6 +16,9 @@ class OrderDetail extends Model
         'order_id',
         'product_variant_id',
         'product_name',
+        'product_sku',
+        'product_color',
+        'product_size',
         'product_price',
         'quantity',
         'subtotal',
@@ -24,6 +27,7 @@ class OrderDetail extends Model
     protected $casts = [
         'order_id' => 'integer',
         'product_variant_id' => 'integer',
+        'product_size' => 'integer',
         'product_price' => 'integer',
         'quantity' => 'integer',
         'subtotal' => 'integer',

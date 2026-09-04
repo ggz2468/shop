@@ -2,10 +2,11 @@
 
 namespace App\Providers;
 
+use App\Contracts\PaymentGateway;
+use App\Gateways\Payments\EcpayPaymentGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(PaymentGateway::class, EcpayPaymentGateway::class);
     }
 
     /**
@@ -134,6 +135,23 @@ class AppServiceProvider extends ServiceProvider
             return [
                 Limit::perMinute(60)->by('cart:read:minute:' . $memberKey),
                 Limit::perHour(500)->by('cart:read:hour:' . $request->ip()),
+            ];
+        });
+
+        RateLimiter::for('orders', function (Request $request): array {
+            $memberKey = (string) ($request->user()?->id ?? $request->ip());
+            $isReadRequest = in_array($request->method(), ['GET', 'HEAD'], true);
+
+            if ($isReadRequest) {
+                return [
+                    Limit::perMinute(60)->by('orders:read:minute:' . $memberKey),
+                    Limit::perHour(500)->by('orders:read:hour:' . $request->ip()),
+                ];
+            }
+
+            return [
+                Limit::perMinute(10)->by('orders:write:minute:' . $memberKey),
+                Limit::perHour(50)->by('orders:write:hour:' . $request->ip()),
             ];
         });
     }

@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Listeners;
+
+use App\Enums\Order\PaymentStatus;
+use App\Enums\PaymentTransaction\Status;
+use App\Events\PaymentRefunded;
+use App\Models\PaymentTransaction;
+use App\Repositories\OrderRepository;
+use App\Repositories\PaymentTransactionRepository;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
+class MarkOrderPaymentAsRefunded implements ShouldQueue
+{
+    /**
+     * @param \App\Repositories\PaymentTransactionRepository $paymentTransactionRepository
+     * @param \App\Repositories\OrderRepository $orderRepository
+     * @return void
+     */
+    public function __construct(
+        private PaymentTransactionRepository $paymentTransactionRepository,
+        private OrderRepository $orderRepository,
+    ) {
+        
+    }
+
+    /**
+     * @param \App\Events\PaymentRefunded $event
+     * @return void
+     */
+    public function handle(PaymentRefunded $event): void
+    {
+        $paymentTransaction = $this->paymentTransactionRepository->first(['id', $event->paymentTransactionId]);
+
+        if (!$paymentTransaction instanceof PaymentTransaction) {
+            throw new ModelNotFoundException("Payment transaction with ID {$event->paymentTransactionId} not found.");
+        }
+
+        $paymentTransactionData = [
+            'status' => Status::REFUNDED->value,
+            'refunded_at' => now(),
+        ];
+
+        if ($event->providerPayload !== null) {
+            $paymentTransactionData['response_payload'] = $event->providerPayload;
+        }
+
+        $this->paymentTransactionRepository->update(['id', $paymentTransaction->id], $paymentTransactionData);
+        $this->orderRepository->update(['id', $paymentTransaction->order_id], [
+            'payment_status' => PaymentStatus::REFUNDED->value,
+        ]);
+    }
+}

@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
@@ -52,4 +53,11 @@ Route::middleware(['auth:sanctum', 'throttle:cart'])->prefix('cart')->group(func
     Route::patch('/items/{productVariant}', [CartController::class, 'updateItem']);
     Route::delete('/items/{productVariant}', [CartController::class, 'destroyItem']);
     Route::delete('/items', [CartController::class, 'clear']);
+});
+
+Route::middleware(['auth:sanctum', 'throttle:orders'])->prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index']);
+    Route::post('/', [OrderController::class, 'store']);
+    Route::get('/{order}', [OrderController::class, 'show']);
+    Route::patch('/{order}/cancel', [OrderController::class, 'cancel']);
 });
