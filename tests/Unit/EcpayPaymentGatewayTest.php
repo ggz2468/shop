@@ -35,7 +35,7 @@ class EcpayPaymentGatewayTest extends TestCase
             ->forProductVariant($productVariant, 2)
             ->create();
         $paymentTransaction = PaymentTransaction::factory()->for($order)->create([
-            'merchant_trade_no' => 'PAYORD202609050001',
+            'merchant_trade_no' => 'PAY202609050001',
             'amount' => 1280,
             'payment_method' => PaymentMethod::CREDIT_CARD->value,
             'created_at' => '2026-09-05 10:30:00',
@@ -46,7 +46,7 @@ class EcpayPaymentGatewayTest extends TestCase
         $this->assertSame('https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5', $paymentRequest['action']);
         $this->assertSame('POST', $paymentRequest['method']);
         $this->assertSame('3002599', $paymentRequest['params']['MerchantID']);
-        $this->assertSame('PAYORD202609050001', $paymentRequest['params']['MerchantTradeNo']);
+        $this->assertSame('PAY202609050001', $paymentRequest['params']['MerchantTradeNo']);
         $this->assertSame('2026/09/05 10:30:00', $paymentRequest['params']['MerchantTradeDate']);
         $this->assertSame('aio', $paymentRequest['params']['PaymentType']);
         $this->assertSame(1280, $paymentRequest['params']['TotalAmount']);

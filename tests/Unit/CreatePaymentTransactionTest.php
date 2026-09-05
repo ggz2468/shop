@@ -38,7 +38,7 @@ class CreatePaymentTransactionTest extends TestCase
 
         $paymentTransaction = PaymentTransaction::query()->where('order_id', $order->id)->firstOrFail();
         $this->assertSame(Provider::ECPAY->value, $paymentTransaction->provider);
-        $this->assertSame('PAYORD20260905ABCDEFG', $paymentTransaction->merchant_trade_no);
+        $this->assertSame('PAY20260905ABCDEFG', $paymentTransaction->merchant_trade_no);
         $this->assertSame(1280, $paymentTransaction->amount);
         $this->assertSame('TWD', $paymentTransaction->currency);
         $this->assertSame(Status::PENDING->value, $paymentTransaction->status);
@@ -47,6 +47,23 @@ class CreatePaymentTransactionTest extends TestCase
         $this->assertNull($paymentTransaction->checkout_payload);
         $this->assertNull($paymentTransaction->response_payload);
         Event::assertDispatched(PaymentInitiated::class, fn (PaymentInitiated $event): bool => $event->paymentTransactionId === $paymentTransaction->id);
+    }
+
+    /**
+     * OrderCreated: 金流交易編號不應保留訂單編號的 ORD prefix。
+     */
+    public function test_handle_removes_order_number_prefix_when_creating_merchant_trade_no(): void
+    {
+        Event::fake([PaymentInitiated::class]);
+
+        $order = Order::factory()->create([
+            'number' => 'ORD20260905A1B2C3',
+        ]);
+
+        $this->makeListener()->handle(new OrderCreated($order->id));
+
+        $paymentTransaction = PaymentTransaction::query()->where('order_id', $order->id)->firstOrFail();
+        $this->assertSame('PAY20260905A1B2C3', $paymentTransaction->merchant_trade_no);
     }
 
     /**

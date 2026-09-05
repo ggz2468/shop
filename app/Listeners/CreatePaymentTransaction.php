@@ -51,7 +51,7 @@ class CreatePaymentTransaction implements ShouldQueue
         $paymentTransaction = $this->paymentTransactionRepository->create([
             'order_id' => $order->id,
             'provider' => $this->resolveProvider((int) $order->payment_method),
-            'merchant_trade_no' => substr('PAY' . $order->number, 0, 64),
+            'merchant_trade_no' => $this->makeMerchantTradeNo($order->number),
             'amount' => $order->total_amount,
             'currency' => 'TWD',
             'status' => Status::PENDING->value,
@@ -71,5 +71,14 @@ class CreatePaymentTransaction implements ShouldQueue
             PaymentMethod::CASH->value => Provider::CASH->value,
             default => Provider::ECPAY->value,
         };
+    }
+
+    private function makeMerchantTradeNo(string $orderNumber): string
+    {
+        $orderNumberSuffix = str_starts_with($orderNumber, 'ORD')
+            ? substr($orderNumber, 3)
+            : $orderNumber;
+
+        return substr('PAY' . $orderNumberSuffix, 0, 64);
     }
 }
