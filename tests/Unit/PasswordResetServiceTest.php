@@ -2,12 +2,12 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
 use App\Models\Member;
 use App\Repositories\MemberRepository;
 use App\Services\PasswordResetService;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -19,7 +19,7 @@ class PasswordResetServiceTest extends TestCase
     public function test_send_reset_link_returns_success_when_member_not_found(): void
     {
         $email = 'member@example.com';
-        
+
         $memberRepository = $this->createMock(MemberRepository::class);
         $memberRepository->expects($this->once())
             ->method('first')
@@ -41,7 +41,7 @@ class PasswordResetServiceTest extends TestCase
 
         $this->assertEquals([
             'status' => 200,
-            'message' => '重設密碼連結已發送（如果該電子郵件存在）。'
+            'message' => '重設密碼連結已發送（如果該電子郵件存在）。',
         ], $result);
     }
 
@@ -50,7 +50,8 @@ class PasswordResetServiceTest extends TestCase
      */
     public function test_send_reset_link_replaces_old_token_and_stores_new_mapping(): void
     {
-        $member = new class extends Member {
+        $member = new class extends Member
+        {
             public bool $notified = false;
 
             public function notify($instance): void
@@ -107,7 +108,8 @@ class PasswordResetServiceTest extends TestCase
      */
     public function test_send_reset_link_cleans_cache_and_returns_500_when_notify_fails(): void
     {
-        $member = new class extends Member {
+        $member = new class extends Member
+        {
             public function notify($instance): void
             {
                 throw new RuntimeException('notify failed');
@@ -164,7 +166,7 @@ class PasswordResetServiceTest extends TestCase
      */
     public function test_send_reset_link_returns_500_when_cache_put_fails(): void
     {
-        $member = new Member();
+        $member = new Member;
         $member->id = 66;
         $member->email = 'member66@example.com';
 
@@ -213,7 +215,8 @@ class PasswordResetServiceTest extends TestCase
      */
     public function test_send_reset_link_returns_500_when_frontend_url_missing(): void
     {
-        $member = new class extends Member {
+        $member = new class extends Member
+        {
             public bool $notified = false;
 
             public function notify($instance): void
@@ -279,7 +282,7 @@ class PasswordResetServiceTest extends TestCase
         $cache = $this->createMock(CacheRepository::class);
         $cache->expects($this->once())
             ->method('pull')
-            ->with('password_reset:token:' . hash('sha256', 'invalid-token'))
+            ->with('password_reset:token:'.hash('sha256', 'invalid-token'))
             ->willReturn(null);
 
         $config = $this->createMock(ConfigRepository::class);
@@ -301,7 +304,7 @@ class PasswordResetServiceTest extends TestCase
         $token = 'valid-token';
         $tokenHash = hash('sha256', $token);
 
-        $member = new Member();
+        $member = new Member;
         $member->id = 501;
         $member->email = 'correct@example.com';
 
@@ -377,7 +380,7 @@ class PasswordResetServiceTest extends TestCase
         $token = 'token-update-fails';
         $tokenHash = hash('sha256', $token);
 
-        $member = new Member();
+        $member = new Member;
         $member->id = 909;
         $member->email = 'member909@example.com';
 
@@ -428,7 +431,7 @@ class PasswordResetServiceTest extends TestCase
         $token = 'token-update-false';
         $tokenHash = hash('sha256', $token);
 
-        $member = new Member();
+        $member = new Member;
         $member->id = 910;
         $member->email = 'member910@example.com';
 
@@ -479,7 +482,7 @@ class PasswordResetServiceTest extends TestCase
         $token = 'valid-token-success';
         $tokenHash = hash('sha256', $token);
 
-        $member = new Member();
+        $member = new Member;
         $member->id = 808;
         $member->email = 'member808@example.com';
 

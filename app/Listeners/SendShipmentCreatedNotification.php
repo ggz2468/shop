@@ -12,26 +12,18 @@ use Psr\Log\LoggerInterface;
 class SendShipmentCreatedNotification implements ShouldQueue
 {
     /**
-     * @param \App\Repositories\ShipmentRepository $shipmentRepository
-     * @param \Psr\Log\LoggerInterface $logger
      * @return void
      */
     public function __construct(
         private ShipmentRepository $shipmentRepository,
         private LoggerInterface $logger,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\ShipmentCreated $event
-     * @return void
-     */
     public function handle(ShipmentCreated $event): void
     {
         $shipment = $this->shipmentRepository->first(['id', $event->shipmentId]);
 
-        if (!$shipment instanceof Shipment) {
+        if (! $shipment instanceof Shipment) {
             throw new ModelNotFoundException("Shipment with ID {$event->shipmentId} not found.");
         }
 

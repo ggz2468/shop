@@ -3,20 +3,20 @@
 namespace App\Models;
 
 use App\Enums\Member\Gender;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Member extends Authenticatable
 {
     use HasApiTokens;
     use HasFactory;
-    use SoftDeletes;
     use Notifiable;
+    use SoftDeletes;
 
     protected $fillable = [
         'national_id_number',

@@ -16,9 +16,7 @@ class OrderCreatedNotification extends Notification
      */
     public function __construct(
         private Order $order,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * Get the notification's delivery channels.
@@ -40,7 +38,7 @@ class OrderCreatedNotification extends Notification
         return (new MailMessage)
             ->subject('訂單已建立')
             ->view('emails.order-created', [
-                'memberName' => trim(($notifiable->first_name ?? '') . ' ' . ($notifiable->last_name ?? '')) ?: '會員',
+                'memberName' => trim(($notifiable->first_name ?? '').' '.($notifiable->last_name ?? '')) ?: '會員',
                 'orderNumber' => $this->order->number,
                 'totalAmount' => $this->order->total_amount,
                 'taxAmount' => $this->order->tax_amount,

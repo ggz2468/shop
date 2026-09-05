@@ -8,10 +8,8 @@ class MemberRepository extends Repository
 {
     /**
      * 更新會員資料
-     * 
-     * @param \App\Models\Member $member
-     * @param array<string, mixed> $data
-     * @return bool
+     *
+     * @param  array<string, mixed>  $data
      */
     public function updateByEloquentModel(Member $member, array $data): bool
     {

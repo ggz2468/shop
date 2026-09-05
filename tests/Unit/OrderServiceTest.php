@@ -17,6 +17,7 @@ use App\Repositories\OrderRepository;
 use App\Repositories\ProductVariantRepository;
 use App\Services\OrderService;
 use App\Stores\CartStore;
+use Exception;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -24,7 +25,6 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Exception;
 use Mockery;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -609,9 +609,9 @@ class OrderServiceTest extends TestCase
         ?Dispatcher $events = null,
     ): OrderService {
         return new OrderService(
-            $orderRepository ?? new OrderRepository(),
-            $orderDetailRepository ?? new OrderDetailRepository(),
-            $productVariantRepository ?? new ProductVariantRepository(),
+            $orderRepository ?? new OrderRepository,
+            $orderDetailRepository ?? new OrderDetailRepository,
+            $productVariantRepository ?? new ProductVariantRepository,
             $cartStore ?? app(CartStore::class),
             $db ?? app(ConnectionInterface::class),
             $logger ?? app(LoggerInterface::class),
@@ -621,7 +621,7 @@ class OrderServiceTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      */
     private function createProductVariant(array $attributes = []): ProductVariant
     {

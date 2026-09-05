@@ -2,12 +2,12 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
 use App\Models\Member;
 use App\Repositories\MemberRepository;
 use App\Services\VerificationService;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -48,7 +48,8 @@ class VerificationServiceTest extends TestCase
      */
     public function test_send_email_verification_link_replaces_old_token_and_notifies_member(): void
     {
-        $member = new class extends Member {
+        $member = new class extends Member
+        {
             public bool $notified = false;
 
             public function notify($instance): void
@@ -107,7 +108,7 @@ class VerificationServiceTest extends TestCase
      */
     public function test_send_email_verification_link_returns_500_when_cache_put_fails(): void
     {
-        $member = new Member();
+        $member = new Member;
         $member->id = 1002;
         $member->email = 'member1002@example.com';
 
@@ -156,7 +157,8 @@ class VerificationServiceTest extends TestCase
      */
     public function test_send_email_verification_link_returns_500_when_frontend_url_missing(): void
     {
-        $member = new class extends Member {
+        $member = new class extends Member
+        {
             public bool $notified = false;
 
             public function notify($instance): void
@@ -216,7 +218,8 @@ class VerificationServiceTest extends TestCase
      */
     public function test_send_email_verification_link_returns_500_when_notify_throws_exception(): void
     {
-        $member = new class extends Member {
+        $member = new class extends Member
+        {
             public function notify($instance): void
             {
                 throw new RuntimeException('notify failed');
@@ -279,7 +282,7 @@ class VerificationServiceTest extends TestCase
         $cache = $this->createMock(CacheRepository::class);
         $cache->expects($this->once())
             ->method('pull')
-            ->with('email_verify:token:' . hash('sha256', 'missing-token'))
+            ->with('email_verify:token:'.hash('sha256', 'missing-token'))
             ->willReturn(null);
 
         $config = $this->createMock(ConfigRepository::class);
@@ -306,7 +309,7 @@ class VerificationServiceTest extends TestCase
         $cache = $this->createMock(CacheRepository::class);
         $cache->expects($this->once())
             ->method('pull')
-            ->with('email_verify:token:' . hash('sha256', $token))
+            ->with('email_verify:token:'.hash('sha256', $token))
             ->willReturn(['member_id' => 'abc']);
 
         $config = $this->createMock(ConfigRepository::class);
@@ -333,7 +336,7 @@ class VerificationServiceTest extends TestCase
         $cache = $this->createMock(CacheRepository::class);
         $cache->expects($this->once())
             ->method('pull')
-            ->with('email_verify:token:' . hash('sha256', $token))
+            ->with('email_verify:token:'.hash('sha256', $token))
             ->willReturn('abc');
 
         $config = $this->createMock(ConfigRepository::class);
@@ -390,7 +393,8 @@ class VerificationServiceTest extends TestCase
         $token = 'already-verified-token';
         $tokenHash = hash('sha256', $token);
 
-        $member = new class extends Member {
+        $member = new class extends Member
+        {
             public $email_verified_at = '2026-05-17 00:00:00';
         };
         $member->id = 2002;
@@ -431,7 +435,7 @@ class VerificationServiceTest extends TestCase
         $token = 'update-zero-rows-token';
         $tokenHash = hash('sha256', $token);
 
-        $member = new Member();
+        $member = new Member;
         $member->id = 2003;
         $member->email_verified_at = null;
 
@@ -453,7 +457,7 @@ class VerificationServiceTest extends TestCase
         $cache->expects($this->never())->method('forget');
 
         $config = $this->createMock(ConfigRepository::class);
-        
+
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->once())
             ->method('error')
@@ -482,7 +486,7 @@ class VerificationServiceTest extends TestCase
         $token = 'update-throws-exception-token';
         $tokenHash = hash('sha256', $token);
 
-        $member = new Member();
+        $member = new Member;
         $member->id = 2005;
         $member->email_verified_at = null;
 
@@ -532,7 +536,7 @@ class VerificationServiceTest extends TestCase
         $token = 'verify-success-token';
         $tokenHash = hash('sha256', $token);
 
-        $member = new Member();
+        $member = new Member;
         $member->id = 2004;
         $member->email_verified_at = null;
 

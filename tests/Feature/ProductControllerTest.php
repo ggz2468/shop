@@ -311,7 +311,7 @@ class ProductControllerTest extends TestCase
 
         $this->app->instance(ProductService::class, $productService);
 
-        $response = $this->getJson('/api/products/' . $product->id);
+        $response = $this->getJson('/api/products/'.$product->id);
 
         $response->assertOk()
             ->assertJsonPath('data.id', $product->id)
@@ -379,7 +379,7 @@ class ProductControllerTest extends TestCase
 
         $this->app->instance(ProductService::class, $productService);
 
-        $response = $this->getJson('/api/products/' . $product->id);
+        $response = $this->getJson('/api/products/'.$product->id);
 
         $response->assertOk()
             ->assertJsonPath('data.id', $product->id)
@@ -416,7 +416,7 @@ class ProductControllerTest extends TestCase
 
         $this->app->instance(ProductService::class, $productService);
 
-        $response = $this->getJson('/api/products/' . $product->id);
+        $response = $this->getJson('/api/products/'.$product->id);
 
         $response->assertStatus(500);
     }

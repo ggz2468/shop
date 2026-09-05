@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Notifications\PasswordResetLinkNotification;
 use App\Repositories\MemberRepository;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Psr\Log\LoggerInterface;
-use App\Notifications\PasswordResetLinkNotification;
 use RuntimeException;
 use Throwable;
 
@@ -14,11 +14,7 @@ class PasswordResetService
 {
     /**
      * 建構子
-     * 
-     * @param \App\Repositories\MemberRepository $memberRepository
-     * @param \Illuminate\Contracts\Cache\Repository $cache
-     * @param \Illuminate\Contracts\Config\Repository $config
-     * @param \Psr\Log\LoggerInterface $logger
+     *
      * @return void
      */
     public function __construct(
@@ -26,14 +22,11 @@ class PasswordResetService
         private CacheRepository $cache,
         private ConfigRepository $config,
         private LoggerInterface $logger,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 發送重設密碼連結
-     * 
-     * @param string $email
+     *
      * @return array{status: int, message: string}
      */
     public function sendResetLink(string $email)
@@ -45,7 +38,7 @@ class PasswordResetService
         if ($member === null) {
             return [
                 'status' => 200,
-                'message' => '重設密碼連結已發送（如果該電子郵件存在）。'
+                'message' => '重設密碼連結已發送（如果該電子郵件存在）。',
             ];
         }
 
@@ -65,7 +58,7 @@ class PasswordResetService
             $expiresAt = now()->addMinutes(10);
             $storedMemberIndex = $this->cache->put($cacheKey, $resetPasswordTokenHash, $expiresAt);
             $storedTokenIndex = $this->cache->put("password_reset:token:$resetPasswordTokenHash", $member->id, $expiresAt);
-            if (!$storedMemberIndex || !$storedTokenIndex) {
+            if (! $storedMemberIndex || ! $storedTokenIndex) {
                 throw new RuntimeException('重設密碼 token 儲存失敗。');
             }
 
@@ -84,34 +77,32 @@ class PasswordResetService
             $this->cache->forget("password_reset:token:$resetPasswordTokenHash");
 
             $this->logger->error('發送重設密碼連結失敗', ['exception' => $e]);
+
             return [
                 'status' => 500,
-                'message' => '發送重設密碼連結失敗，請稍後再試。'
+                'message' => '發送重設密碼連結失敗，請稍後再試。',
             ];
         }
 
         return [
             'status' => 200,
-            'message' => '重設密碼連結已發送（如果該電子郵件存在）。'
+            'message' => '重設密碼連結已發送（如果該電子郵件存在）。',
         ];
     }
 
     /**
      * 重設密碼
-     * 
-     * @param string $token
-     * @param string $email
-     * @param string $newPassword
+     *
      * @return array{status: int, message: string}
      */
     public function resetPassword(string $token, string $email, string $newPassword)
     {
         $tokenHash = hash('sha256', $token);
         $memberId = $this->cache->pull("password_reset:token:$tokenHash");
-        if (!is_numeric($memberId)) {
+        if (! is_numeric($memberId)) {
             return [
                 'status' => 400,
-                'message' => '重設密碼失敗，請確認輸入的資訊是否正確。'
+                'message' => '重設密碼失敗，請確認輸入的資訊是否正確。',
             ];
         }
 
@@ -120,29 +111,30 @@ class PasswordResetService
 
         // 透過 token 對應的會員編號取得會員資料，並確認 email 一致，避免 token 被跨帳號誤用。
         $member = $this->memberRepository->first(['id', $memberId]);
-        if ($member === null || !hash_equals(strtolower((string) $member->email), strtolower($email))) {
+        if ($member === null || ! hash_equals(strtolower((string) $member->email), strtolower($email))) {
             $this->cache->forget($cacheKey);
 
             return [
                 'status' => 400,
-                'message' => '重設密碼失敗，請確認輸入的資訊是否正確。'
+                'message' => '重設密碼失敗，請確認輸入的資訊是否正確。',
             ];
         }
 
         // 更新會員密碼。
         try {
             $updated = $this->memberRepository->updateByEloquentModel($member, [
-                'password' => $newPassword
+                'password' => $newPassword,
             ]);
 
-            if (!$updated) {
+            if (! $updated) {
                 throw new RuntimeException('會員密碼重設失敗。');
             }
         } catch (Throwable $e) {
             $this->logger->error('會員密碼重設失敗', ['member_id' => $member->id, 'exception' => $e]);
+
             return [
                 'status' => 500,
-                'message' => '重設密碼失敗，請稍後再試。'
+                'message' => '重設密碼失敗，請稍後再試。',
             ];
         }
 
@@ -151,7 +143,7 @@ class PasswordResetService
 
         return [
             'status' => 200,
-            'message' => '密碼已成功重設。'
+            'message' => '密碼已成功重設。',
         ];
     }
 }

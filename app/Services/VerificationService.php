@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Notifications\EmailVerificationLinkNotification;
 use App\Repositories\MemberRepository;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Psr\Log\LoggerInterface;
-use App\Notifications\EmailVerificationLinkNotification;
 use RuntimeException;
 use Throwable;
 
@@ -14,11 +14,7 @@ class VerificationService
 {
     /**
      * 建構子
-     * 
-     * @param \App\Repositories\MemberRepository $memberRepository
-     * @param \Illuminate\Contracts\Cache\Repository $cache
-     * @param \Illuminate\Contracts\Config\Repository $config
-     * @param \Psr\Log\LoggerInterface $logger
+     *
      * @return void
      */
     public function __construct(
@@ -26,14 +22,11 @@ class VerificationService
         private CacheRepository $cache,
         private ConfigRepository $config,
         private LoggerInterface $logger,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 發送電子郵件驗證連結
-     * 
-     * @param string $email
+     *
      * @return array{status: int, message: string}
      */
     public function sendEmailVerificationLink(string $email)
@@ -44,9 +37,10 @@ class VerificationService
         // 檢查對應會員資料是否存在，若不存在則直接回傳發送成功的訊息，以避免洩漏會員資料的存在與否給潛在攻擊者。
         if ($member === null) {
             $this->logger->warning('嘗試發送電子郵件驗證連結，但找不到對應的會員資料', ['email' => $email]);
+
             return [
                 'status' => 200,
-                'message' => '電子郵件驗證連結發送成功。'
+                'message' => '電子郵件驗證連結發送成功。',
             ];
         }
 
@@ -66,7 +60,7 @@ class VerificationService
             $expiresAt = now()->addMinutes(10);
             $storedTokenIndex = $this->cache->put("email_verify:token:$verificationTokenHash", $member->id, $expiresAt);
             $storedMemberIndex = $this->cache->put($cacheKey, $verificationTokenHash, $expiresAt);
-            if (!$storedTokenIndex || !$storedMemberIndex) {
+            if (! $storedTokenIndex || ! $storedMemberIndex) {
                 throw new RuntimeException('電子郵件驗證 token 儲存失敗。');
             }
 
@@ -77,7 +71,7 @@ class VerificationService
 
             // 發送電子郵件驗證連結通知信
             $frontendUrl = rtrim($frontendUrl, '/');
-            $verificationUrl = sprintf("%s/verifications/email/verify?token=%s", $frontendUrl, $verificationToken);
+            $verificationUrl = sprintf('%s/verifications/email/verify?token=%s', $frontendUrl, $verificationToken);
             $member->notify(new EmailVerificationLinkNotification($verificationUrl));
         } catch (Throwable $e) {
             // 因發送電子郵件驗證連結通知信失敗，故刪除剛剛建立的 token 快取資料，以避免無效的 token 留在快取中。
@@ -86,33 +80,33 @@ class VerificationService
 
             // 捕捉發送通知過程中可能發生的例外，並將錯誤訊息紀錄於 Log 中，最後回傳發送失敗的訊息。
             $this->logger->error('電子郵件驗證連結發送失敗', ['exception' => $e]);
+
             return [
                 'status' => 500,
-                'message' => '電子郵件驗證連結發送失敗，請稍後再試。'
+                'message' => '電子郵件驗證連結發送失敗，請稍後再試。',
             ];
         }
 
         return [
             'status' => 200,
-            'message' => '電子郵件驗證連結發送成功。'
+            'message' => '電子郵件驗證連結發送成功。',
         ];
     }
 
     /**
      * 驗證電子郵件
-     * 
-     * @param string $token
+     *
      * @return array{status: int, message: string}
      */
     public function verifyEmail(string $token)
     {
-        $hashedTokenCacheKey = 'email_verify:token:' . hash('sha256', $token);
+        $hashedTokenCacheKey = 'email_verify:token:'.hash('sha256', $token);
         $data = $this->cache->pull($hashedTokenCacheKey);
 
         if ($data === null) {
             return [
                 'status' => 422,
-                'message' => '驗證連結無效或已過期。'
+                'message' => '驗證連結無效或已過期。',
             ];
         }
 
@@ -124,10 +118,10 @@ class VerificationService
         }
 
         // 判斷會員編號是否為數值
-        if (!is_numeric($memberId)) {
+        if (! is_numeric($memberId)) {
             return [
                 'status' => 422,
-                'message' => '驗證連結無效或已過期。'
+                'message' => '驗證連結無效或已過期。',
             ];
         }
 
@@ -141,7 +135,7 @@ class VerificationService
 
             return [
                 'status' => 500,
-                'message' => '驗證失敗，無法找到對應的會員資料。'
+                'message' => '驗證失敗，無法找到對應的會員資料。',
             ];
         }
 
@@ -151,7 +145,7 @@ class VerificationService
 
             return [
                 'status' => 200,
-                'message' => '電子郵件已完成驗證。'
+                'message' => '電子郵件已完成驗證。',
             ];
         }
 
@@ -172,7 +166,7 @@ class VerificationService
 
             return [
                 'status' => 500,
-                'message' => '驗證失敗，請稍後再試。'
+                'message' => '驗證失敗，請稍後再試。',
             ];
         }
 
@@ -181,7 +175,7 @@ class VerificationService
 
         return [
             'status' => 200,
-            'message' => '電子郵件驗證成功。'
+            'message' => '電子郵件驗證成功。',
         ];
     }
 }

@@ -10,19 +10,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class CancelPaymentTransaction implements ShouldQueue
 {
     /**
-     * @param \App\Repositories\PaymentTransactionRepository $paymentTransactionRepository
      * @return void
      */
     public function __construct(
         private PaymentTransactionRepository $paymentTransactionRepository,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\OrderCanceled $event
-     * @return void
-     */
     public function handle(OrderCanceled $event): void
     {
         $paymentTransactions = $this->paymentTransactionRepository->get(['order_id', $event->orderId]);
@@ -32,7 +25,7 @@ class CancelPaymentTransaction implements ShouldQueue
         ];
 
         foreach ($paymentTransactions as $paymentTransaction) {
-            if (!in_array($paymentTransaction->status, $cancelableStatuses, true)) {
+            if (! in_array($paymentTransaction->status, $cancelableStatuses, true)) {
                 continue;
             }
 

@@ -2,27 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\VerificationService;
+use Illuminate\Http\Request;
 
 class VerificationController extends Controller
 {
     /**
      * 建構子
-     * 
-     * @param \App\Services\VerificationService $verificationService
+     *
      * @return void
      */
     public function __construct(
         private VerificationService $verificationService
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 發送簡訊驗證碼
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function sendSmsVerificationCode(Request $request)
@@ -34,8 +30,7 @@ class VerificationController extends Controller
 
     /**
      * 驗證手機
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function verifyPhone(Request $request)
@@ -47,8 +42,7 @@ class VerificationController extends Controller
 
     /**
      * 發送電子郵件驗證連結
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function sendEmailVerificationLink(Request $request)
@@ -73,8 +67,7 @@ class VerificationController extends Controller
 
     /**
      * 驗證電子郵件
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function verifyEmail(Request $request)

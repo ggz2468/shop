@@ -419,7 +419,7 @@ class ProductRepositoryTest extends TestCase
                 $expectedKeys = ["product:{$popularProduct->id}", "product:{$normalProduct->id}"];
 
                 foreach ($expectedKeys as $key) {
-                    if (!isset($payload[$key])) {
+                    if (! isset($payload[$key])) {
                         return false;
                     }
                 }

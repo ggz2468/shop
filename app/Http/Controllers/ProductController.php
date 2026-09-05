@@ -2,31 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Services\ProductService;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Repositories\ProductRepository;
+use App\Services\ProductService;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductController extends Controller
 {
     /**
      * 建構子
-     * 
-     * @param \App\Services\ProductService $productService
+     *
      * @return void
      */
     public function __construct(
         private ProductService $productService
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 取得熱門產品列表
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index(Request $request)
@@ -59,13 +55,13 @@ class ProductController extends Controller
 
     /**
      * 取得單一產品資料
-     * 
-     * @param \App\Models\Product $product
+     *
      * @return \App\Http\Resources\ProductResource
      */
     public function show(Product $product)
     {
         $productData = $this->productService->getProductData($product);
+
         return new ProductResource($productData);
     }
 

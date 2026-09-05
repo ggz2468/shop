@@ -2,15 +2,11 @@
 
 namespace App\Repositories;
 
-use Illuminate\Cache\CacheManager;
 use App\Models\Product;
+use Illuminate\Cache\CacheManager;
 
 class ProductRepository extends Repository
 {
-    /**
-     * @param int $productId
-     * @return string
-     */
     public static function cacheKey(int $productId): string
     {
         return "product:{$productId}";
@@ -18,28 +14,28 @@ class ProductRepository extends Repository
 
     /**
      * 預設排序欄位
-     * 
+     *
      * @var string
      */
     public const string DEFAULT_SORT_FIELD = 'view_counts';
 
     /**
      * 預設排序方向
-     * 
+     *
      * @var string
      */
     public const string DEFAULT_SORT_DIRECTION = 'desc';
 
     /**
      * 預設每頁資料筆數
-     * 
+     *
      * @var int
      */
     public const int DEFAULT_ROW_COUNTS_PER_PAGE = 10;
 
     /**
      * 預設頁碼
-     * 
+     *
      * @var int
      */
     public const int DEFAULT_PAGE = 1;
@@ -47,7 +43,6 @@ class ProductRepository extends Repository
     /**
      * 建構子
      *
-     * @param \Illuminate\Cache\CacheManager $cache
      * @return void
      */
     public function __construct(
@@ -58,9 +53,9 @@ class ProductRepository extends Repository
 
     /**
      * 取得產品
-     * 
-     * @param int $rowCountsPerPage 每頁資料筆數
-     * @param int $page 頁碼
+     *
+     * @param  int  $rowCountsPerPage  每頁資料筆數
+     * @param  int  $page  頁碼
      * @return array<string, array<int, array<string, mixed>>|int>
      */
     public function getProducts(int $rowCountsPerPage = self::DEFAULT_ROW_COUNTS_PER_PAGE, int $page = self::DEFAULT_PAGE)
@@ -72,6 +67,7 @@ class ProductRepository extends Repository
         $productIdsCacheKey = "product_ids:page:{$page}:row_counts_per_page:{$rowCountsPerPage}";
         $productIds = $this->cache->tags(['products_index'])->remember($productIdsCacheKey, 3600, function () use ($rowCountsPerPage, $page) {
             $paginator = $this->paginate([], ['images', 'variants.productSpec'], [[self::DEFAULT_SORT_FIELD, self::DEFAULT_SORT_DIRECTION], ['id', 'asc']], $rowCountsPerPage, $page);
+
             return collect($paginator->items())
                 ->pluck('id')
                 ->all();
@@ -85,7 +81,7 @@ class ProductRepository extends Repository
 
         // 取得不存在於 Cache 中的產品編號
         $missingProductIds = array_map(
-            fn ($key) => (int) str_replace('product:', '', $key), array_filter($cacheKeys, fn ($key) => !isset($products[$key]))
+            fn ($key) => (int) str_replace('product:', '', $key), array_filter($cacheKeys, fn ($key) => ! isset($products[$key]))
         );
 
         // 取得不存在於 Cache 中的產品資料
@@ -124,14 +120,14 @@ class ProductRepository extends Repository
         $products = collect($products)
             ->sortBy([
                 [self::DEFAULT_SORT_FIELD, self::DEFAULT_SORT_DIRECTION],
-                ['id', 'asc']
+                ['id', 'asc'],
             ])
             ->values()
             ->all();
 
         return [
             'products' => $products,
-            'total_row_counts' => $totalRowCounts
+            'total_row_counts' => $totalRowCounts,
         ];
     }
 }

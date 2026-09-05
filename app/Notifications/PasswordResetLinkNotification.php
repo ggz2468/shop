@@ -39,7 +39,7 @@ class PasswordResetLinkNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('重設密碼連結通知信')
             ->view('emails.password-reset', [
-                'memberName' => trim(($notifiable->first_name ?? '') . ' ' . ($notifiable->last_name ?? '')) ?: '會員',
+                'memberName' => trim(($notifiable->first_name ?? '').' '.($notifiable->last_name ?? '')) ?: '會員',
                 'resetPasswordUrl' => $this->resetPasswordUrl,
                 'expiresInMinutes' => $this->expiresInMinutes,
             ]);

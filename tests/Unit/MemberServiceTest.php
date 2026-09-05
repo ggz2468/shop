@@ -7,9 +7,9 @@ use App\Services\MemberService;
 use App\Services\VerificationService;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\QueryException;
+use PDOException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use PDOException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 

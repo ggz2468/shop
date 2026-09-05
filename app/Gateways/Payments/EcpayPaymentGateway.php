@@ -3,28 +3,24 @@
 namespace App\Gateways\Payments;
 
 use App\Contracts\PaymentGateway;
-use App\Models\PaymentTransaction;
 use App\Enums\Order\PaymentMethod;
+use App\Models\PaymentTransaction;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 
 class EcpayPaymentGateway implements PaymentGateway
 {
     /**
      * 建構子
-     * 
-     * @param \Illuminate\Contracts\Config\Repository $config
+     *
      * @return void
      */
     public function __construct(
         private ConfigRepository $config,
-    ) {
-
-    }
+    ) {}
 
     /**
      * 建立呼叫綠界金流 API 時所需的請求資訊
-     * 
-     * @param \App\Models\PaymentTransaction $paymentTransaction
+     *
      * @return array{
      *     action: string,
      *     method: string,
@@ -65,6 +61,7 @@ class EcpayPaymentGateway implements PaymentGateway
             'EncryptType' => 1,
         ];
         $checkMacValue = $this->makeCheckMacValue($params);
+
         return [
             'action' => $this->config->get('services.ecpay.payment_action_url'),
             'method' => 'POST',
@@ -72,10 +69,6 @@ class EcpayPaymentGateway implements PaymentGateway
         ];
     }
 
-    /**
-     * @param int $paymentMethod
-     * @return string
-     */
     private function resolveChoosePayment(int $paymentMethod): string
     {
         return match ($paymentMethod) {
@@ -85,8 +78,7 @@ class EcpayPaymentGateway implements PaymentGateway
     }
 
     /**
-     * @param array<string, mixed> $params
-     * @return string
+     * @param  array<string, mixed>  $params
      */
     private function makeCheckMacValue(array $params): string
     {

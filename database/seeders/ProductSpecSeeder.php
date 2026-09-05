@@ -17,7 +17,7 @@ class ProductSpecSeeder extends Seeder
             ->crossJoin(ProductSpecFactory::sizes())
             ->map(fn (array $spec): array => [
                 'color' => $spec[0],
-                'size' => $spec[1]
+                'size' => $spec[1],
             ])
             ->all();
 

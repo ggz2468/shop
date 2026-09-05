@@ -17,28 +17,19 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class CreatePaymentTransaction implements ShouldQueue
 {
     /**
-     * @param \App\Repositories\OrderRepository $orderRepository
-     * @param \App\Repositories\PaymentTransactionRepository $paymentTransactionRepository
-     * @param \Illuminate\Contracts\Events\Dispatcher $events
      * @return void
      */
     public function __construct(
         private OrderRepository $orderRepository,
         private PaymentTransactionRepository $paymentTransactionRepository,
         private Dispatcher $events,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\OrderCreated $event
-     * @return void
-     */
     public function handle(OrderCreated $event): void
     {
         $order = $this->orderRepository->first(['id', $event->orderId]);
 
-        if (!$order instanceof Order) {
+        if (! $order instanceof Order) {
             throw new ModelNotFoundException("Order with ID {$event->orderId} not found.");
         }
 
@@ -79,6 +70,6 @@ class CreatePaymentTransaction implements ShouldQueue
             ? substr($orderNumber, 3)
             : $orderNumber;
 
-        return substr('PAY' . $orderNumberSuffix, 0, 64);
+        return substr('PAY'.$orderNumberSuffix, 0, 64);
     }
 }

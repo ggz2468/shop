@@ -2,7 +2,4 @@
 
 namespace App\Repositories;
 
-class PaymentTransactionRepository extends Repository
-{
-    
-}
+class PaymentTransactionRepository extends Repository {}

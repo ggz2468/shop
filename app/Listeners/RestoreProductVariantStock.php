@@ -13,19 +13,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class RestoreProductVariantStock implements ShouldQueue
 {
     /**
-     * @param \Illuminate\Database\ConnectionInterface $db
      * @return void
      */
     public function __construct(
         private ConnectionInterface $db,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\OrderCanceled $event
-     * @return void
-     */
     public function handle(OrderCanceled $event): void
     {
         $this->db->transaction(function () use ($event): void {
@@ -34,7 +27,7 @@ class RestoreProductVariantStock implements ShouldQueue
                 ->lockForUpdate()
                 ->find($event->orderId);
 
-            if (!$order instanceof Order) {
+            if (! $order instanceof Order) {
                 throw new ModelNotFoundException("Order with ID {$event->orderId} not found.");
             }
 

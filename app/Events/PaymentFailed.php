@@ -10,16 +10,12 @@ class PaymentFailed
     use Dispatchable, SerializesModels;
 
     /**
-     * @param int $paymentTransactionId
-     * @param string|null $reason
-     * @param array<string, mixed>|null $providerPayload
+     * @param  array<string, mixed>|null  $providerPayload
      * @return void
      */
     public function __construct(
         public int $paymentTransactionId,
         public ?string $reason = null,
         public ?array $providerPayload = null,
-    ) {
-        
-    }
+    ) {}
 }

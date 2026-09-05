@@ -32,23 +32,23 @@ class MemberFactory extends Factory
         $floor = $this->faker->numberBetween(1, 20);
 
         $hasLane = $this->faker->boolean();
-        $lanePart = $hasLane ? $lane . '巷' : '';
-        $alleyPart = $hasLane && $this->faker->boolean() ? $alley . '弄' : '';
+        $lanePart = $hasLane ? $lane.'巷' : '';
+        $alleyPart = $hasLane && $this->faker->boolean() ? $alley.'弄' : '';
 
         $nationalId = $this->faker->unique()->regexify('[A-Z][12][0-9]{8}');
 
         return [
-            'first_name' => $this->faker->randomElement($nameChars) . $this->faker->randomElement($nameChars),
+            'first_name' => $this->faker->randomElement($nameChars).$this->faker->randomElement($nameChars),
             'last_name' => $this->faker->randomElement($surnames),
             'national_id_number' => $nationalId,
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->unique()->regexify('09[0-9]{8}'),
             'password' => Hash::make('password'),
             'birth_date' => $this->faker->date('Y-m-d', '-18 years'),
-            'address' => $city . $district . $road . $lanePart . $alleyPart . $number . '號' . $floor . '樓',
+            'address' => $city.$district.$road.$lanePart.$alleyPart.$number.'號'.$floor.'樓',
             'gender' => $this->faker->numberBetween(1, 3),
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
     }
 }

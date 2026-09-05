@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Repositories\ProductRepository;
 use App\Models\Product;
+use App\Repositories\ProductRepository;
 use Illuminate\Cache\CacheManager;
 use Illuminate\Redis\RedisManager;
 
@@ -11,25 +11,20 @@ class ProductService
 {
     /**
      * 建構子
-     * 
-     * @param \App\Repositories\ProductRepository $productRepository
-     * @param \Illuminate\Cache\CacheManager $cache
-     * @param \Illuminate\Redis\RedisManager $redis
+     *
      * @return void
      */
     public function __construct(
         private ProductRepository $productRepository,
         private CacheManager $cache,
         private RedisManager $redis,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 取得熱門產品: 熱門產品為依據被瀏覽次數由多至少前十名的產品
-     * 
-     * @param int $rowCountsPerPage 每頁資料筆數
-     * @param int $page 頁碼
+     *
+     * @param  int  $rowCountsPerPage  每頁資料筆數
+     * @param  int  $page  頁碼
      * @return array<string, array<int, array<string, mixed>>|int>
      */
     public function getPopularProducts(int $rowCountsPerPage = ProductRepository::DEFAULT_ROW_COUNTS_PER_PAGE, int $page = ProductRepository::DEFAULT_PAGE)
@@ -39,8 +34,7 @@ class ProductService
 
     /**
      * 取得單一產品資料
-     * 
-     * @param \App\Models\Product $product
+     *
      * @return array<string, mixed>
      */
     public function getProductData(Product $product)

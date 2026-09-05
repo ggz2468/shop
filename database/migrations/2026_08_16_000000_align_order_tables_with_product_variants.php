@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('orders', 'idempotency_key')) {
+        if (! Schema::hasColumn('orders', 'idempotency_key')) {
             Schema::table('orders', function (Blueprint $table) {
                 $table->string('idempotency_key', 64)
                     ->nullable()
@@ -28,7 +28,7 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasColumn('order_details', 'product_id') && !Schema::hasColumn('order_details', 'product_variant_id')) {
+        if (Schema::hasColumn('order_details', 'product_id') && ! Schema::hasColumn('order_details', 'product_variant_id')) {
             Schema::table('order_details', function (Blueprint $table) {
                 $table->foreignId('product_variant_id')
                     ->nullable()

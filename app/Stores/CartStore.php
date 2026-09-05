@@ -12,36 +12,31 @@ class CartStore
 {
     /**
      * 購物車 cache key 前綴字串
-     * 
+     *
      * @var string
      */
     private const string CACHE_KEY_PREFIX = 'cart:member:';
 
     /**
      * 購物車 cache 有效天數
-     * 
+     *
      * @var int
      */
     private const int CACHE_TTL_DAYS = 7;
 
     /**
      * 建構子
-     * 
-     * @param \Illuminate\Contracts\Cache\Repository $cache
-     * @param \Psr\Log\LoggerInterface $logger
+     *
      * @return void
      */
     public function __construct(
         private CacheRepository $cache,
         private LoggerInterface $logger,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 取得會員購物車內容
      *
-     * @param int $memberId
      * @return array<int, array<string, mixed>>
      */
     public function getItems(int $memberId): array
@@ -54,9 +49,6 @@ class CartStore
     /**
      * 將產品加入會員購物車
      *
-     * @param int $memberId
-     * @param int $productVariantId
-     * @param int $quantity
      * @return array<string, mixed>|false
      */
     public function storeItem(int $memberId, int $productVariantId, int $quantity): array|false
@@ -70,7 +62,7 @@ class CartStore
             $existingItems = $this->getItems($memberId);
 
             // 若不存在相同產品，則新增項目
-            if (!in_array($productVariantId, array_column($existingItems, 'product_variant_id'), true)) {
+            if (! in_array($productVariantId, array_column($existingItems, 'product_variant_id'), true)) {
                 $existingItems[] = $storedItem;
 
                 if ($this->cache->put($cacheKey, array_values($existingItems), $this->cartExpiresAt()) === false) {
@@ -85,7 +77,7 @@ class CartStore
                 if ($item['product_variant_id'] !== $storedItem['product_variant_id']) {
                     continue;
                 }
-                
+
                 $item['quantity'] += $storedItem['quantity'];
                 break;
             }
@@ -102,16 +94,14 @@ class CartStore
                 'quantity' => $quantity,
                 'exception' => $e,
             ]);
+
             return false;
         }
     }
 
     /**
      * 更新會員購物車中指定產品的數量
-     * 
-     * @param int $memberId
-     * @param int $productVariantId
-     * @param int $quantity
+     *
      * @return array<string, mixed>|false|null
      */
     public function updateItem(int $memberId, int $productVariantId, int $quantity): array|false|null
@@ -125,7 +115,7 @@ class CartStore
             $existingItems = $this->getItems($memberId);
 
             // 檢查是否存在相同產品
-            if (!in_array($productVariantId, array_column($existingItems, 'product_variant_id'), true)) {
+            if (! in_array($productVariantId, array_column($existingItems, 'product_variant_id'), true)) {
                 return null;
             }
 
@@ -151,15 +141,14 @@ class CartStore
                 'quantity' => $quantity,
                 'exception' => $e,
             ]);
+
             return false;
         }
     }
 
     /**
      * 刪除會員購物車中指定的產品
-     * 
-     * @param int $memberId
-     * @param int $productVariantId
+     *
      * @return array<string, mixed>|false|null
      */
     public function destroyItem(int $memberId, int $productVariantId): array|false|null
@@ -172,7 +161,7 @@ class CartStore
             $existingItems = $this->getItems($memberId);
 
             // 檢查是否存在相同產品
-            if (!in_array($productVariantId, array_column($existingItems, 'product_variant_id'), true)) {
+            if (! in_array($productVariantId, array_column($existingItems, 'product_variant_id'), true)) {
                 return null;
             }
 
@@ -197,16 +186,15 @@ class CartStore
                 'product_variant_id' => $productVariantId,
                 'exception' => $e,
             ]);
+
             return false;
         }
     }
 
     /**
      * 清空會員購物車
-     * 
-     * @param int $memberId
-     * @return void
-     * 
+     *
+     *
      * @throws \RuntimeException
      */
     public function clearCart(int $memberId): void
@@ -222,18 +210,11 @@ class CartStore
         }
     }
 
-    /**
-     * @param int $memberId
-     * @return string
-     */
     private function cacheKey(int $memberId): string
     {
-        return self::CACHE_KEY_PREFIX . $memberId . ':items';
+        return self::CACHE_KEY_PREFIX.$memberId.':items';
     }
 
-    /**
-     * @return \Carbon\Carbon
-     */
     private function cartExpiresAt(): Carbon
     {
         return Carbon::now()->addDays(self::CACHE_TTL_DAYS);

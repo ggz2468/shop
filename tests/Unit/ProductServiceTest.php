@@ -82,7 +82,8 @@ class ProductServiceTest extends TestCase
      */
     public function test_get_product_data_returns_cached_data_when_cache_hit(): void
     {
-        $product = new class extends Product {
+        $product = new class extends Product
+        {
             public bool $loadCalled = false;
 
             public function load($relations)
@@ -139,7 +140,8 @@ class ProductServiceTest extends TestCase
      */
     public function test_get_product_data_builds_and_caches_data_when_cache_miss_with_image(): void
     {
-        $product = new class extends Product {
+        $product = new class extends Product
+        {
             public bool $loadCalled = false;
 
             public function load($relations)
@@ -214,7 +216,8 @@ class ProductServiceTest extends TestCase
      */
     public function test_get_product_data_uses_default_image_when_images_missing(): void
     {
-        $product = new class extends Product {
+        $product = new class extends Product
+        {
             public bool $loadCalled = false;
 
             public function load($relations)
@@ -228,7 +231,7 @@ class ProductServiceTest extends TestCase
         $product->name = 'No Image Product';
         $product->description = 'no images';
         $product->view_counts = 5;
-        $product->setRelation('images', new Collection());
+        $product->setRelation('images', new Collection);
         $product->setRelation('variants', new Collection([(object) [
             'id' => 29,
             'product_spec_id' => 9,

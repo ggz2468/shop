@@ -125,8 +125,8 @@ class CreatePaymentTransactionTest extends TestCase
     private function makeListener(): CreatePaymentTransaction
     {
         return new CreatePaymentTransaction(
-            new OrderRepository(),
-            new PaymentTransactionRepository(),
+            new OrderRepository,
+            new PaymentTransactionRepository,
             app('events'),
         );
     }

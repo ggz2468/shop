@@ -78,7 +78,7 @@ class VerificationControllerTest extends TestCase
     public function test_send_email_verification_link_returns_custom_messages_for_required_and_max_rules(): void
     {
         $response = $this->postJson('/api/verifications/email/send', [
-            'email' => str_repeat('a', 244) . '@example.com',
+            'email' => str_repeat('a', 244).'@example.com',
         ]);
 
         $response->assertStatus(422)
@@ -199,7 +199,7 @@ class VerificationControllerTest extends TestCase
             ->assertJsonPath('errors.token.0', '驗證 Token 長度錯誤。');
 
         $regexResponse = $this->postJson('/api/verifications/email/verify', [
-            'token' => str_repeat('a', 42) . '+',
+            'token' => str_repeat('a', 42).'+',
         ]);
 
         $regexResponse->assertStatus(422)

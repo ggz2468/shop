@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Enums\Order\PaymentStatus;
 use App\Enums\Order\PaymentMethod;
+use App\Enums\Order\PaymentStatus;
 use App\Enums\Order\Status;
 use App\Enums\PaymentTransaction\Provider;
 use App\Enums\PaymentTransaction\Status as PaymentTransactionStatus;
@@ -548,10 +548,6 @@ class OrderControllerTest extends TestCase
         ])->assertStatus(429);
     }
 
-    /**
-     * @param int $status
-     * @param string $message
-     */
     private function assertStoreOrderServiceFailure(int $status, string $message): void
     {
         $member = Member::factory()->create();

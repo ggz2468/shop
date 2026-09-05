@@ -2,28 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Services\CartService;
 use App\Models\ProductVariant;
+use App\Services\CartService;
+use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
     /**
      * 建構子
-     * 
-     * @param \App\Services\CartService $cartService
+     *
      * @return void
      */
     public function __construct(
         private CartService $cartService,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 取得購物車內容
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(Request $request)
@@ -40,8 +36,7 @@ class CartController extends Controller
 
     /**
      * 將產品加入購物車
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function storeItem(Request $request)
@@ -62,9 +57,7 @@ class CartController extends Controller
 
     /**
      * 更新購物車中指定產品的數量
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\ProductVariant $productVariant
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function updateItem(Request $request, ProductVariant $productVariant)
@@ -84,9 +77,7 @@ class CartController extends Controller
 
     /**
      * 刪除購物車中指定的產品
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\ProductVariant $productVariant
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroyItem(Request $request, ProductVariant $productVariant)
@@ -101,8 +92,7 @@ class CartController extends Controller
 
     /**
      * 清空購物車
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function clear(Request $request)

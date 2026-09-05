@@ -10,9 +10,6 @@ use RuntimeException;
 
 class CartServiceTest extends TestCase
 {
-    /**
-     * @return void
-     */
     protected function tearDown(): void
     {
         Mockery::close();

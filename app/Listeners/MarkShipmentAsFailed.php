@@ -12,24 +12,17 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class MarkShipmentAsFailed implements ShouldQueue
 {
     /**
-     * @param \App\Repositories\ShipmentRepository $shipmentRepository
      * @return void
      */
     public function __construct(
         private ShipmentRepository $shipmentRepository,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\ShipmentFailed $event
-     * @return void
-     */
     public function handle(ShipmentFailed $event): void
     {
         $shipment = $this->shipmentRepository->first(['id', $event->shipmentId]);
 
-        if (!$shipment instanceof Shipment) {
+        if (! $shipment instanceof Shipment) {
             throw new ModelNotFoundException("Shipment with ID {$event->shipmentId} not found.");
         }
 

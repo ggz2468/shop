@@ -16,28 +16,19 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class CreateShipment implements ShouldQueue
 {
     /**
-     * @param \App\Repositories\PaymentTransactionRepository $paymentTransactionRepository
-     * @param \App\Repositories\ShipmentRepository $shipmentRepository
-     * @param \Illuminate\Contracts\Events\Dispatcher $events
      * @return void
      */
     public function __construct(
         private PaymentTransactionRepository $paymentTransactionRepository,
         private ShipmentRepository $shipmentRepository,
         private Dispatcher $events,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\PaymentSucceeded $event
-     * @return void
-     */
     public function handle(PaymentSucceeded $event): void
     {
         $paymentTransaction = $this->paymentTransactionRepository->first(['id', $event->paymentTransactionId]);
 
-        if (!$paymentTransaction instanceof PaymentTransaction) {
+        if (! $paymentTransaction instanceof PaymentTransaction) {
             throw new ModelNotFoundException("Payment transaction with ID {$event->paymentTransactionId} not found.");
         }
 
@@ -55,7 +46,7 @@ class CreateShipment implements ShouldQueue
         }
 
         $member = $order->member;
-        $recipientName = trim((string) ($member?->last_name ?? '') . (string) ($member?->first_name ?? ''));
+        $recipientName = trim((string) ($member?->last_name ?? '').(string) ($member?->first_name ?? ''));
         $shipment = $this->shipmentRepository->create([
             'order_id' => $order->id,
             'provider' => null,

@@ -2,7 +2,4 @@
 
 namespace App\Repositories;
 
-class ShipmentRepository extends Repository
-{
-    
-}
+class ShipmentRepository extends Repository {}

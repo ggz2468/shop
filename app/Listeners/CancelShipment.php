@@ -10,19 +10,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class CancelShipment implements ShouldQueue
 {
     /**
-     * @param \App\Repositories\ShipmentRepository $shipmentRepository
      * @return void
      */
     public function __construct(
         private ShipmentRepository $shipmentRepository,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\OrderCanceled $event
-     * @return void
-     */
     public function handle(OrderCanceled $event): void
     {
         $shipments = $this->shipmentRepository->get(['order_id', $event->orderId]);
@@ -32,7 +25,7 @@ class CancelShipment implements ShouldQueue
         ];
 
         foreach ($shipments as $shipment) {
-            if (!in_array($shipment->status, $cancelableStatuses, true)) {
+            if (! in_array($shipment->status, $cancelableStatuses, true)) {
                 continue;
             }
 

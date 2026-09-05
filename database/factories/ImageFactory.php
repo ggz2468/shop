@@ -21,7 +21,7 @@ class ImageFactory extends Factory
             'imageable_id' => 0,
             'imageable_type' => '',
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
     }
 }

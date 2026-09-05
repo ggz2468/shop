@@ -2,7 +2,4 @@
 
 namespace App\Repositories;
 
-class OrderRepository extends Repository
-{
-    
-}
+class OrderRepository extends Repository {}

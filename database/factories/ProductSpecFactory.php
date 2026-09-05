@@ -26,7 +26,7 @@ class ProductSpecFactory extends Factory
             '紫',
             '黑',
             '白',
-            '灰'
+            '灰',
         ];
     }
 
@@ -51,7 +51,7 @@ class ProductSpecFactory extends Factory
             'color' => $this->faker->randomElement(self::colors()),
             'size' => $this->faker->randomElement(self::sizes()),
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
     }
 }

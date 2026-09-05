@@ -10,14 +10,11 @@ class ShipmentDelivered
     use Dispatchable, SerializesModels;
 
     /**
-     * @param int $shipmentId
-     * @param array<string, mixed>|null $providerPayload
+     * @param  array<string, mixed>|null  $providerPayload
      * @return void
      */
     public function __construct(
         public int $shipmentId,
         public ?array $providerPayload = null,
-    ) {
-        
-    }
+    ) {}
 }

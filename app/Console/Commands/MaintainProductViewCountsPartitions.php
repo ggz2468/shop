@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use DateTimeImmutable;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class MaintainProductViewCountsPartitions extends Command
@@ -29,8 +29,9 @@ class MaintainProductViewCountsPartitions extends Command
     {
         $driver = DB::connection()->getDriverName();
 
-        if (!in_array($driver, ['mysql', 'mariadb'], true)) {
+        if (! in_array($driver, ['mysql', 'mariadb'], true)) {
             $this->info('Skip partition maintenance: current driver does not support this workflow.');
+
             return self::SUCCESS;
         }
 
@@ -39,7 +40,7 @@ class MaintainProductViewCountsPartitions extends Command
         $nextMonthStart = $thisMonthStart->modify('+1 month');
         $nextNextMonthStart = $thisMonthStart->modify('+2 months');
         $nextUpperBound = $nextNextMonthStart->format('Y-m-d H:i:s');
-        $nextPartition = 'p' . $nextMonthStart->format('Ym');
+        $nextPartition = 'p'.$nextMonthStart->format('Ym');
         $pmaxExists = DB::table('information_schema.partitions')
             ->whereRaw('table_schema = DATABASE()')
             ->where('table_name', 'product_view_counts')
@@ -47,8 +48,9 @@ class MaintainProductViewCountsPartitions extends Command
             ->exists();
 
         // 確認 pmax 分區是否存在，若不存在則無法進行分區維護
-        if (!$pmaxExists) {
+        if (! $pmaxExists) {
             $this->error('Partition pmax does not exist on product_view_counts.');
+
             return self::FAILURE;
         }
 
@@ -59,7 +61,7 @@ class MaintainProductViewCountsPartitions extends Command
             ->exists();
 
         // 確認下一個月的分區是否存在，若不存在則新增該分區
-        if (!$nextPartitionExists) {
+        if (! $nextPartitionExists) {
             $sqlStatement = <<< SQL_STATEMENT
             ALTER TABLE product_view_counts
             REORGANIZE PARTITION pmax INTO (
@@ -82,11 +84,11 @@ class MaintainProductViewCountsPartitions extends Command
         foreach ($partitions as $partition) {
             $partitionName = $partition->partition_name ?? $partition->PARTITION_NAME ?? null;
 
-            if (!is_string($partitionName)) {
+            if (! is_string($partitionName)) {
                 continue;
             }
 
-            if (!preg_match('/^p(\d{6})$/', $partitionName, $matches)) {
+            if (! preg_match('/^p(\d{6})$/', $partitionName, $matches)) {
                 continue;
             }
 
@@ -96,7 +98,7 @@ class MaintainProductViewCountsPartitions extends Command
         }
 
         // 刪除超過三個月前的所有月分區
-        if (!empty($expiredPartitions)) {
+        if (! empty($expiredPartitions)) {
             $partitionList = implode(', ', $expiredPartitions);
             DB::statement("ALTER TABLE product_view_counts DROP PARTITION {$partitionList}");
         }

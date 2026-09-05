@@ -14,26 +14,18 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class MarkOrderAsDelivering implements ShouldQueue
 {
     /**
-     * @param \App\Repositories\ShipmentRepository $shipmentRepository
-     * @param \App\Repositories\OrderRepository $orderRepository
      * @return void
      */
     public function __construct(
         private ShipmentRepository $shipmentRepository,
         private OrderRepository $orderRepository,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\ShipmentShipped $event
-     * @return void
-     */
     public function handle(ShipmentShipped $event): void
     {
         $shipment = $this->shipmentRepository->first(['id', $event->shipmentId]);
 
-        if (!$shipment instanceof Shipment) {
+        if (! $shipment instanceof Shipment) {
             throw new ModelNotFoundException("Shipment with ID {$event->shipmentId} not found.");
         }
 

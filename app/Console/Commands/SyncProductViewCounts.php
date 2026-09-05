@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Product;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -44,7 +44,7 @@ class SyncProductViewCounts extends Command
                     ->where('product_id', $productId)
                     ->where('recorded_at', $recordedAt)
                     ->update([
-                        'view_counts' => DB::raw('view_counts + ' . (int) $viewCounts),
+                        'view_counts' => DB::raw('view_counts + '.(int) $viewCounts),
                     ]);
 
                 // 若 product_view_counts 資料表中沒有相對應的資料，則直接新增一筆新的資料

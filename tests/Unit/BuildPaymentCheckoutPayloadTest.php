@@ -56,7 +56,7 @@ class BuildPaymentCheckoutPayloadTest extends TestCase
             ->with('Payment checkout payload is ready.', Mockery::on(fn (array $context): bool => $context['payment_transaction_id'] === $paymentTransaction->id));
 
         $listener = new BuildPaymentCheckoutPayload(
-            new PaymentTransactionRepository(),
+            new PaymentTransactionRepository,
             $ecpayPaymentGateway,
             $logger,
         );
@@ -85,7 +85,7 @@ class BuildPaymentCheckoutPayloadTest extends TestCase
         $logger->shouldReceive('info')->never();
 
         $listener = new BuildPaymentCheckoutPayload(
-            new PaymentTransactionRepository(),
+            new PaymentTransactionRepository,
             $ecpayPaymentGateway,
             $logger,
         );

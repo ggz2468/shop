@@ -14,14 +14,11 @@ class OrderCreated
     /**
      * Create a new event instance.
      *
-     * @param int $orderId
      * @return void
      */
     public function __construct(
         public int $orderId,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * Get the channels the event should broadcast on.

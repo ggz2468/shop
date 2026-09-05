@@ -2,71 +2,63 @@
 
 namespace App\Services;
 
-use App\Repositories\OrderRepository;
+use App\Enums\Order\PaymentStatus;
+use App\Enums\Order\Status;
+use App\Events\OrderCreated;
+use App\Models\Order;
 use App\Repositories\OrderDetailRepository;
+use App\Repositories\OrderRepository;
 use App\Repositories\ProductVariantRepository;
 use App\Stores\CartStore;
-use Illuminate\Database\ConnectionInterface;
-use Psr\Log\LoggerInterface;
 use Illuminate\Cache\CacheManager;
-use Illuminate\Contracts\Events\Dispatcher;
-use App\Enums\Order\Status;
-use App\Enums\Order\PaymentStatus;
-use App\Models\Order;
-use App\Events\OrderCreated;
-use Illuminate\Database\QueryException;
 use Illuminate\Contracts\Cache\LockTimeoutException;
-use Throwable;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\QueryException;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
+use Throwable;
 
 class OrderService
 {
     /**
      * 稅率
-     * 
+     *
      * @var float
      */
     private const float TAX_RATE = 0.05;
 
     /**
      * 免運門檻
-     * 
+     *
      * @var int
      */
     private const int FREE_SHIPPING_THRESHOLD = 1000;
 
     /**
      * 運費
-     * 
+     *
      * @var int
      */
     private const int SHIPPING_FEE = 80;
 
     /**
      * 結帳鎖定秒數
-     * 
+     *
      * @var int
      */
     private const int CHECKOUT_LOCK_SECONDS = 10;
 
     /**
      * 結帳鎖定等待秒數
-     * 
+     *
      * @var int
      */
     private const int CHECKOUT_LOCK_WAIT_SECONDS = 3;
 
     /**
      * 建構子
-     * 
-     * @param \App\Repositories\OrderRepository $orderRepository
-     * @param \App\Repositories\OrderDetailRepository $orderDetailRepository
-     * @param \App\Repositories\ProductVariantRepository $productVariantRepository
-     * @param \App\Stores\CartStore $cartStore
-     * @param \Illuminate\Database\ConnectionInterface $db
-     * @param \Psr\Log\LoggerInterface $logger
-     * @param \Illuminate\Cache\CacheManager $cache
-     * @param \Illuminate\Contracts\Events\Dispatcher $events
+     *
      * @return void
      */
     public function __construct(
@@ -78,16 +70,11 @@ class OrderService
         private LoggerInterface $logger,
         private CacheManager $cache,
         private Dispatcher $events,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 從會員購物車建立訂單
-     * 
-     * @param int $memberId
-     * @param string $idempotencyKey
-     * @param int $paymentMethod
+     *
      * @return array<string, mixed>
      */
     public function storeOrder(int $memberId, string $idempotencyKey, int $paymentMethod): array
@@ -105,20 +92,16 @@ class OrderService
 
     /**
      * 產生訂單編號
-     * 
-     * @return string
      */
     private function generateOrderNumber(): string
     {
         $randomString = substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 6);
+
         return sprintf('ORD%s%s', now()->format('Ymd'), $randomString);
     }
 
     /**
      * 計算稅額
-     *
-     * @param int $itemsSubtotal
-     * @return int
      */
     private function calculateTaxAmount(int $itemsSubtotal): int
     {
@@ -127,9 +110,6 @@ class OrderService
 
     /**
      * 計算運費
-     * 
-     * @param int $itemsSubtotal
-     * @return int
      */
     private function calculateShippingFee(int $itemsSubtotal): int
     {
@@ -140,13 +120,13 @@ class OrderService
 
     /**
      * 解析訂單資料
-     * 
-     * @param \App\Models\Order $order
+     *
      * @return array<string, mixed>
      */
     private function parseOrderData(Order $order): array
     {
         $order->load('orderDetails');
+
         return [
             'id' => $order->id,
             'number' => $order->number,
@@ -165,14 +145,11 @@ class OrderService
                 'product_price' => $orderDetail->product_price,
                 'quantity' => $orderDetail->quantity,
                 'subtotal' => $orderDetail->subtotal,
-            ])->all()
+            ])->all(),
         ];
     }
 
     /**
-     * @param int $memberId
-     * @param string $idempotencyKey
-     * @param int $paymentMethod
      * @return array<string, mixed>
      */
     private function storeOrderWithLock(int $memberId, string $idempotencyKey, int $paymentMethod): array
@@ -185,7 +162,7 @@ class OrderService
             ]);
 
             // 檢查訂單是否已存在
-            if (!empty($existingOrder)) {
+            if (! empty($existingOrder)) {
                 return [
                     'status' => 200,
                     'message' => '訂單已存在。',
@@ -210,8 +187,9 @@ class OrderService
                 ]);
 
                 // 檢查訂單是否已存在
-                if (!empty($existingOrder)) {
+                if (! empty($existingOrder)) {
                     $order = $existingOrder;
+
                     return;
                 }
 

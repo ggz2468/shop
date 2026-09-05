@@ -6,8 +6,8 @@ use App\Contracts\PaymentGateway;
 use App\Gateways\Payments\EcpayPaymentGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,8 +28,8 @@ class AppServiceProvider extends ServiceProvider
             $identityKey = (string) ($request->input('email') ?? $request->input('phone') ?? $request->ip());
 
             return [
-                Limit::perMinute(5)->by('auth:login:minute:' . $identityKey),
-                Limit::perHour(30)->by('auth:login:hour:' . $request->ip()),
+                Limit::perMinute(5)->by('auth:login:minute:'.$identityKey),
+                Limit::perHour(30)->by('auth:login:hour:'.$request->ip()),
             ];
         });
 
@@ -37,8 +37,8 @@ class AppServiceProvider extends ServiceProvider
             $identityKey = (string) ($request->input('email') ?? $request->input('phone') ?? $request->ip());
 
             return [
-                Limit::perMinute(5)->by('auth:register:minute:' . $identityKey),
-                Limit::perHour(20)->by('auth:register:hour:' . $request->ip()),
+                Limit::perMinute(5)->by('auth:register:minute:'.$identityKey),
+                Limit::perHour(20)->by('auth:register:hour:'.$request->ip()),
             ];
         });
 
@@ -46,9 +46,9 @@ class AppServiceProvider extends ServiceProvider
             $emailKey = (string) ($request->input('email') ?? $request->ip());
 
             return [
-                Limit::perMinute(1)->by('auth:password:forgot:cooldown:' . $emailKey),
-                Limit::perMinutes(15, 5)->by('auth:password:forgot:burst:' . $emailKey),
-                Limit::perHour(30)->by('auth:password:forgot:ip:' . $request->ip()),
+                Limit::perMinute(1)->by('auth:password:forgot:cooldown:'.$emailKey),
+                Limit::perMinutes(15, 5)->by('auth:password:forgot:burst:'.$emailKey),
+                Limit::perHour(30)->by('auth:password:forgot:ip:'.$request->ip()),
             ];
         });
 
@@ -57,9 +57,9 @@ class AppServiceProvider extends ServiceProvider
             $tokenFingerprint = hash('sha256', (string) ($request->input('token') ?? ''));
 
             return [
-                Limit::perMinute(5)->by('auth:password:reset:minute:ip:' . $request->ip()),
-                Limit::perMinutes(15, 10)->by('auth:password:reset:email:' . ($emailKey !== '' ? $emailKey : $request->ip())),
-                Limit::perHour(20)->by('auth:password:reset:token:' . $tokenFingerprint),
+                Limit::perMinute(5)->by('auth:password:reset:minute:ip:'.$request->ip()),
+                Limit::perMinutes(15, 10)->by('auth:password:reset:email:'.($emailKey !== '' ? $emailKey : $request->ip())),
+                Limit::perHour(20)->by('auth:password:reset:token:'.$tokenFingerprint),
             ];
         });
 
@@ -67,8 +67,8 @@ class AppServiceProvider extends ServiceProvider
             $memberKey = (string) ($request->user()?->id ?? $request->ip());
 
             return [
-                Limit::perMinute(60)->by('auth:session:minute:' . $memberKey),
-                Limit::perHour(500)->by('auth:session:hour:' . $request->ip()),
+                Limit::perMinute(60)->by('auth:session:minute:'.$memberKey),
+                Limit::perHour(500)->by('auth:session:hour:'.$request->ip()),
             ];
         });
 
@@ -76,10 +76,10 @@ class AppServiceProvider extends ServiceProvider
             $memberKey = (string) ($request->user()?->id ?? $request->ip());
 
             return [
-                Limit::perMinute(1)->by('verification:email:send:cooldown:' . $memberKey),
-                Limit::perMinutes(15, 5)->by('verification:email:send:burst:' . $memberKey),
-                Limit::perDay(20)->by('verification:email:send:day:' . $memberKey),
-                Limit::perHour(30)->by('verification:email:send:ip:' . $request->ip()),
+                Limit::perMinute(1)->by('verification:email:send:cooldown:'.$memberKey),
+                Limit::perMinutes(15, 5)->by('verification:email:send:burst:'.$memberKey),
+                Limit::perDay(20)->by('verification:email:send:day:'.$memberKey),
+                Limit::perHour(30)->by('verification:email:send:ip:'.$request->ip()),
             ];
         });
 
@@ -87,10 +87,10 @@ class AppServiceProvider extends ServiceProvider
             $phoneKey = (string) ($request->user()?->phone ?? $request->input('phone') ?? $request->ip());
 
             return [
-                Limit::perMinute(1)->by('verification:phone:send:cooldown:' . $phoneKey),
-                Limit::perMinutes(15, 3)->by('verification:phone:send:burst:' . $phoneKey),
-                Limit::perDay(10)->by('verification:phone:send:day:' . $phoneKey),
-                Limit::perHour(20)->by('verification:phone:send:ip:' . $request->ip()),
+                Limit::perMinute(1)->by('verification:phone:send:cooldown:'.$phoneKey),
+                Limit::perMinutes(15, 3)->by('verification:phone:send:burst:'.$phoneKey),
+                Limit::perDay(10)->by('verification:phone:send:day:'.$phoneKey),
+                Limit::perHour(20)->by('verification:phone:send:ip:'.$request->ip()),
             ];
         });
 
@@ -98,8 +98,8 @@ class AppServiceProvider extends ServiceProvider
             $memberKey = (string) ($request->user()?->id ?? $request->ip());
 
             return [
-                Limit::perMinute(10)->by('verification:email:verify:ip:' . $request->ip()),
-                Limit::perMinutes(15, 30)->by('verification:email:verify:member:' . $memberKey),
+                Limit::perMinute(10)->by('verification:email:verify:ip:'.$request->ip()),
+                Limit::perMinutes(15, 30)->by('verification:email:verify:member:'.$memberKey),
             ];
         });
 
@@ -107,8 +107,8 @@ class AppServiceProvider extends ServiceProvider
             $phoneKey = (string) ($request->user()?->phone ?? $request->input('phone') ?? $request->ip());
 
             return [
-                Limit::perMinutes(10, 5)->by('verification:phone:verify:phone:' . $phoneKey),
-                Limit::perHour(30)->by('verification:phone:verify:ip:' . $request->ip()),
+                Limit::perMinutes(10, 5)->by('verification:phone:verify:phone:'.$phoneKey),
+                Limit::perHour(30)->by('verification:phone:verify:ip:'.$request->ip()),
             ];
         });
 
@@ -118,14 +118,14 @@ class AppServiceProvider extends ServiceProvider
 
             if ($isReadRequest) {
                 return [
-                    Limit::perMinute(120)->by('products:read:minute:' . $actorKey),
-                    Limit::perHour(1000)->by('products:read:hour:' . $request->ip()),
+                    Limit::perMinute(120)->by('products:read:minute:'.$actorKey),
+                    Limit::perHour(1000)->by('products:read:hour:'.$request->ip()),
                 ];
             }
 
             return [
-                Limit::perMinute(30)->by('products:write:minute:' . $actorKey),
-                Limit::perHour(200)->by('products:write:hour:' . $request->ip()),
+                Limit::perMinute(30)->by('products:write:minute:'.$actorKey),
+                Limit::perHour(200)->by('products:write:hour:'.$request->ip()),
             ];
         });
 
@@ -133,8 +133,8 @@ class AppServiceProvider extends ServiceProvider
             $memberKey = (string) ($request->user()?->id ?? $request->ip());
 
             return [
-                Limit::perMinute(60)->by('cart:read:minute:' . $memberKey),
-                Limit::perHour(500)->by('cart:read:hour:' . $request->ip()),
+                Limit::perMinute(60)->by('cart:read:minute:'.$memberKey),
+                Limit::perHour(500)->by('cart:read:hour:'.$request->ip()),
             ];
         });
 
@@ -144,14 +144,14 @@ class AppServiceProvider extends ServiceProvider
 
             if ($isReadRequest) {
                 return [
-                    Limit::perMinute(60)->by('orders:read:minute:' . $memberKey),
-                    Limit::perHour(500)->by('orders:read:hour:' . $request->ip()),
+                    Limit::perMinute(60)->by('orders:read:minute:'.$memberKey),
+                    Limit::perHour(500)->by('orders:read:hour:'.$request->ip()),
                 ];
             }
 
             return [
-                Limit::perMinute(10)->by('orders:write:minute:' . $memberKey),
-                Limit::perHour(50)->by('orders:write:hour:' . $request->ip()),
+                Limit::perMinute(10)->by('orders:write:minute:'.$memberKey),
+                Limit::perHour(50)->by('orders:write:hour:'.$request->ip()),
             ];
         });
     }

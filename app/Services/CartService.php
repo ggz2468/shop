@@ -9,20 +9,16 @@ class CartService
 {
     /**
      * 建構子
-     * 
-     * @param \App\Stores\CartStore $cartStore
+     *
      * @return void
      */
     public function __construct(
         private CartStore $cartStore,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 取得會員購物車內容
      *
-     * @param int $memberId
      * @return array<int, array<string, mixed>>
      */
     public function getCartItems(int $memberId): array
@@ -33,9 +29,6 @@ class CartService
     /**
      * 將產品加入會員購物車
      *
-     * @param int $memberId
-     * @param int $productVariantId
-     * @param int $quantity
      * @return array<string, mixed>
      */
     public function storeCartItem(int $memberId, int $productVariantId, int $quantity): array
@@ -58,10 +51,7 @@ class CartService
 
     /**
      * 更新會員購物車中指定產品的數量
-     * 
-     * @param int $memberId
-     * @param int $productVariantId
-     * @param int $quantity
+     *
      * @return array<string, mixed>
      */
     public function updateCartItem(int $memberId, int $productVariantId, int $quantity): array
@@ -91,9 +81,7 @@ class CartService
 
     /**
      * 刪除會員購物車中指定的產品
-     * 
-     * @param int $memberId
-     * @param int $productVariantId
+     *
      * @return array<string, mixed>
      */
     public function destroyCartItem(int $memberId, int $productVariantId): array
@@ -123,8 +111,7 @@ class CartService
 
     /**
      * 清空會員購物車
-     * 
-     * @param int $memberId
+     *
      * @return array<string, mixed>
      */
     public function clearCart(int $memberId): array

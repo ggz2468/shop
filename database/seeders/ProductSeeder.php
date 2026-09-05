@@ -22,7 +22,7 @@ class ProductSeeder extends Seeder
         $catalog = array_values(array_map(
             fn (string $path): array => [
                 'name' => pathinfo($path, PATHINFO_FILENAME),
-                'url' => '/storage/' . $path,
+                'url' => '/storage/'.$path,
             ],
             $imagePaths
         ));

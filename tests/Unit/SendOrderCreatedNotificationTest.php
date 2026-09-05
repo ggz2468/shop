@@ -48,6 +48,6 @@ class SendOrderCreatedNotificationTest extends TestCase
 
     private function makeListener(): SendOrderCreatedNotification
     {
-        return new SendOrderCreatedNotification(new OrderRepository());
+        return new SendOrderCreatedNotification(new OrderRepository);
     }
 }

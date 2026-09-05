@@ -2,27 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\PasswordResetService;
+use Illuminate\Http\Request;
 
 class PasswordResetController extends Controller
 {
     /**
      * 建構子
-     * 
-     * @param \App\Services\PasswordResetService $passwordResetService
+     *
      * @return void
      */
     public function __construct(
         private PasswordResetService $passwordResetService
-    ) {
-
-    }
+    ) {}
 
     /**
      * 發送重設密碼連結
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function sendResetLink(Request $request)
@@ -45,8 +41,7 @@ class PasswordResetController extends Controller
 
     /**
      * 重設密碼
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function resetPassword(Request $request)

@@ -21,14 +21,14 @@ return new class extends Migration
 
         $driver = Schema::getConnection()->getDriverName();
 
-        if (!in_array($driver, ['mysql', 'mariadb'], true)) {
+        if (! in_array($driver, ['mysql', 'mariadb'], true)) {
             return;
         }
 
         $thisMonthStart = new DateTimeImmutable('first day of this month 00:00:00');
         $nextMonthStart = $thisMonthStart->modify('+1 month');
         $currentUpperBound = $nextMonthStart->format('Y-m-d H:i:s');
-        $currentPartition = 'p' . $thisMonthStart->format('Ym');
+        $currentPartition = 'p'.$thisMonthStart->format('Ym');
 
         $sqlStatement = <<< SQL_STATEMENT
         ALTER TABLE product_view_counts

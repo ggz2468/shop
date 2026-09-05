@@ -2,30 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Services\OrderService;
 use App\Enums\Order\PaymentMethod;
-use Illuminate\Validation\Rule;
+use App\Services\OrderService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
     /**
      * 建構子
-     * 
-     * @param \App\Services\OrderService $orderService
+     *
      * @return void
      */
     public function __construct(
         private OrderService $orderService,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 建立訂單
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)

@@ -10,12 +10,9 @@ class OrderCanceled
     use Dispatchable, SerializesModels;
 
     /**
-     * @param int $orderId
      * @return void
      */
     public function __construct(
         public int $orderId,
-    ) {
-        
-    }
+    ) {}
 }

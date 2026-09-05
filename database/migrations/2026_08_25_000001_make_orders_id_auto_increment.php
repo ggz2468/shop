@@ -14,7 +14,7 @@ return new class extends Migration
     {
         $driver = Schema::getConnection()->getDriverName();
 
-        if (!in_array($driver, ['mysql', 'mariadb'], true)) {
+        if (! in_array($driver, ['mysql', 'mariadb'], true)) {
             return;
         }
 
@@ -36,7 +36,7 @@ return new class extends Migration
     {
         $driver = Schema::getConnection()->getDriverName();
 
-        if (!in_array($driver, ['mysql', 'mariadb'], true)) {
+        if (! in_array($driver, ['mysql', 'mariadb'], true)) {
             return;
         }
 

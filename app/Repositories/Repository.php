@@ -2,24 +2,22 @@
 
 namespace App\Repositories;
 
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use ReflectionClass;
-use Exception;
 
 abstract class Repository
 {
     /**
      * Model Class 名稱
-     * 
-     * @var string
      */
     protected string $modelClassName;
 
     /**
      * 建構子
-     * 
+     *
      * @return void
-     * 
+     *
      * @throws \Exception
      */
     public function __construct()
@@ -28,13 +26,13 @@ abstract class Repository
         $repositoryClassShortName = $classReflector->getShortName();
         $modelClassShortName = strstr($repositoryClassShortName, 'Repository', true);
 
-        if (!class_exists($modelClassFullName = "App\\Models\\$modelClassShortName")) {
+        if (! class_exists($modelClassFullName = "App\\Models\\$modelClassShortName")) {
             throw new Exception("Model class [$modelClassFullName] does not exist.");
         }
 
         $classReflector = new ReflectionClass($modelClassFullName);
 
-        if (!$classReflector->isSubclassOf(Model::class)) {
+        if (! $classReflector->isSubclassOf(Model::class)) {
             throw new Exception("Class [$modelClassFullName] is not a valid Eloquent model.");
         }
 
@@ -43,8 +41,8 @@ abstract class Repository
 
     /**
      * 新增資料
-     * 
-     * @param array<string, mixed> $data
+     *
+     * @param  array<string, mixed>  $data
      * @return \Illuminate\Database\Eloquent\Model
      */
     public function create(array $data)
@@ -54,9 +52,9 @@ abstract class Repository
 
     /**
      * 更新資料
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
-     * @param array<string, mixed> $data
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
+     * @param  array<string, mixed>  $data
      * @return int
      */
     public function update(array $conditions, array $data)
@@ -66,8 +64,8 @@ abstract class Repository
 
     /**
      * 刪除資料
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
      * @return int
      */
     public function delete(array $conditions)
@@ -77,11 +75,10 @@ abstract class Repository
 
     /**
      * 取得條件篩選後的資料
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
-     * @param array<int, string> $relations
-     * @param array<int, string>|array<int, array<int, string>> $orderBy
-     * @param int $limit
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
+     * @param  array<int, string>  $relations
+     * @param  array<int, string>|array<int, array<int, string>>  $orderBy
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function get(array $conditions, array $relations = [], array $orderBy = [], int $limit = 100)
@@ -91,18 +88,16 @@ abstract class Repository
         foreach ($this->normalizeOrderBy($orderBy) as $order) {
             $query = $query->orderBy(...$order);
         }
-        
+
         return $query->limit($limit)->get();
     }
 
     /**
      * 取得經條件篩選後，指定頁碼內的資料
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
-     * @param array<int, string> $relations
-     * @param array<int, string>|array<int, array<int, string>> $orderBy
-     * @param int $rowCountsPerPage
-     * @param int $page
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
+     * @param  array<int, string>  $relations
+     * @param  array<int, string>|array<int, array<int, string>>  $orderBy
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function paginate(array $conditions, array $relations = [], array $orderBy = [], int $rowCountsPerPage = 10, int $page = 1)
@@ -118,8 +113,8 @@ abstract class Repository
 
     /**
      * 取得條件篩選後的第一筆資料
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
      * @return \Illuminate\Database\Eloquent\Model|null
      */
     public function first(array $conditions)
@@ -129,8 +124,8 @@ abstract class Repository
 
     /**
      * 取得條件篩選後的資料筆數
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
      * @return int
      */
     public function count(array $conditions)
@@ -140,8 +135,8 @@ abstract class Repository
 
     /**
      * 取得條件篩選後的資料是否存在
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
      * @return bool
      */
     public function exists(array $conditions)
@@ -151,8 +146,8 @@ abstract class Repository
 
     /**
      * 取得條件篩選後的資料是否不存在
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
      * @return bool
      */
     public function doesNotExist(array $conditions)
@@ -162,7 +157,7 @@ abstract class Repository
 
     /**
      * 取得所有資料
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function all()
@@ -172,8 +167,8 @@ abstract class Repository
 
     /**
      * 資料條件篩選
-     * 
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
+     *
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
      * @return \Illuminate\Database\Eloquent\Builder
      */
     private function filter(array $conditions)
@@ -194,7 +189,7 @@ abstract class Repository
      * - ['status', '=', 'active']
      * - [['status', '=', 'active'], ['id', '>', 10]]
      *
-     * @param array<int, mixed>|array<int, array<int, mixed>> $conditions
+     * @param  array<int, mixed>|array<int, array<int, mixed>>  $conditions
      * @return array<int, array<int, mixed>>
      */
     private function normalizeConditions(array $conditions): array
@@ -203,14 +198,14 @@ abstract class Repository
             return [];
         }
 
-        if (isset($conditions[0]) && !is_array($conditions[0])) {
+        if (isset($conditions[0]) && ! is_array($conditions[0])) {
             return [$conditions];
         }
 
         $normalized = [];
 
         foreach ($conditions as $condition) {
-            if (!is_array($condition) || $condition === []) {
+            if (! is_array($condition) || $condition === []) {
                 continue;
             }
 
@@ -227,7 +222,7 @@ abstract class Repository
      * - ['id', 'asc']
      * - [['view_counts', 'desc'], ['id', 'asc']]
      *
-     * @param array<int, string>|array<int, array<int, string>> $orderBy
+     * @param  array<int, string>|array<int, array<int, string>>  $orderBy
      * @return array<int, array{0: string, 1: string}>
      */
     private function normalizeOrderBy(array $orderBy): array
@@ -246,7 +241,7 @@ abstract class Repository
         $normalized = [];
 
         foreach ($orderBy as $order) {
-            if (!is_array($order) || !isset($order[0]) || !is_string($order[0])) {
+            if (! is_array($order) || ! isset($order[0]) || ! is_string($order[0])) {
                 continue;
             }
 

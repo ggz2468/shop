@@ -11,9 +11,6 @@ use RuntimeException;
 
 class CartStoreTest extends TestCase
 {
-    /**
-     * @return void
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -21,9 +18,6 @@ class CartStoreTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-08-01 12:00:00'));
     }
 
-    /**
-     * @return void
-     */
     protected function tearDown(): void
     {
         Carbon::setTestNow();
@@ -865,9 +859,6 @@ class CartStoreTest extends TestCase
         $store->clearCart($memberId);
     }
 
-    /**
-     * @return \Carbon\Carbon
-     */
     private function cartExpiresAt(): Carbon
     {
         return Carbon::now()->addDays(7);

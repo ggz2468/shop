@@ -8,9 +8,8 @@ class OrderDetailRepository extends Repository
 {
     /**
      * 新增多筆訂單明細
-     * 
-     * @param array<int, array<string, mixed>> $data
-     * @return bool
+     *
+     * @param  array<int, array<string, mixed>>  $data
      */
     public function createMany(array $data): bool
     {

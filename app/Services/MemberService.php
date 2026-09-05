@@ -3,21 +3,16 @@
 namespace App\Services;
 
 use App\Repositories\MemberRepository;
-use App\Services\VerificationService;
 use Illuminate\Database\ConnectionInterface;
-use Psr\Log\LoggerInterface;
 use Illuminate\Database\QueryException;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 class MemberService
 {
     /**
      * 建構子
-     * 
-     * @param \App\Repositories\MemberRepository $memberRepository
-     * @param \App\Services\VerificationService $verificationService
-     * @param \Illuminate\Database\ConnectionInterface $db
-     * @param \Psr\Log\LoggerInterface $logger
+     *
      * @return void
      */
     public function __construct(
@@ -25,14 +20,12 @@ class MemberService
         private VerificationService $verificationService,
         private ConnectionInterface $db,
         private LoggerInterface $logger,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 會員註冊
-     * 
-     * @param array<string, mixed> $data
+     *
+     * @param  array<string, mixed>  $data
      * @return array{status: int, message: string}
      */
     public function register(array $data)
@@ -63,15 +56,17 @@ class MemberService
             }
 
             $this->logger->error('會員註冊失敗', ['exception' => $e]);
+
             return [
                 'status' => 500,
-                'message' => '會員註冊失敗，請稍後再試。'
+                'message' => '會員註冊失敗，請稍後再試。',
             ];
         } catch (Throwable $e) {
             $this->logger->error('會員註冊失敗', ['exception' => $e]);
+
             return [
                 'status' => 500,
-                'message' => '會員註冊失敗，請稍後再試。'
+                'message' => '會員註冊失敗，請稍後再試。',
             ];
         }
 
@@ -81,15 +76,16 @@ class MemberService
         // 如果發送電子郵件驗證連結失敗，則記錄錯誤日誌，但不影響會員註冊的整體流程，因為會員仍然可以透過其他方式完成驗證。
         if ($emailSendingResult['status'] !== 200) {
             $this->logger->error('會員註冊成功，但電子郵件驗證連結發送失敗', ['email' => $data['email'], 'error' => $emailSendingResult['message']]);
+
             return [
                 'status' => 201,
-                'message' => '會員註冊成功，但電子郵件驗證連結發送失敗，請稍後重試。'
+                'message' => '會員註冊成功，但電子郵件驗證連結發送失敗，請稍後重試。',
             ];
         }
 
         return [
             'status' => 201,
-            'message' => '會員註冊成功。'
+            'message' => '會員註冊成功。',
         ];
     }
 }

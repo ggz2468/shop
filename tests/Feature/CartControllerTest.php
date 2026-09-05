@@ -1340,8 +1340,7 @@ class CartControllerTest extends TestCase
     /**
      * 模擬指定會員的購物車項目
      *
-     * @param \App\Models\Member $member
-     * @param array<int, array<string, mixed>> $cartItems
+     * @param  array<int, array<string, mixed>>  $cartItems
      */
     private function mockCartItemsForMember(Member $member, array $cartItems): void
     {

@@ -17,9 +17,7 @@ class EmailVerificationLinkNotification extends Notification implements ShouldQu
     public function __construct(
         private readonly string $verificationUrl,
         private readonly int $expiresInMinutes = 10,
-    ) {
-        
-    }
+    ) {}
 
     /**
      * Get the notification's delivery channels.
@@ -36,7 +34,7 @@ class EmailVerificationLinkNotification extends Notification implements ShouldQu
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $memberName = trim(($notifiable->first_name ?? '') . ' ' . ($notifiable->last_name ?? ''));
+        $memberName = trim(($notifiable->first_name ?? '').' '.($notifiable->last_name ?? ''));
 
         return (new MailMessage)
             ->subject('電子郵件驗證連結通知信')

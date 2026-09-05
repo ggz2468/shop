@@ -10,12 +10,9 @@ class PaymentInitiated
     use Dispatchable, SerializesModels;
 
     /**
-     * @param int $paymentTransactionId
      * @return void
      */
     public function __construct(
         public int $paymentTransactionId,
-    ) {
-        
-    }
+    ) {}
 }

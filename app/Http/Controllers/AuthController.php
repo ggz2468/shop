@@ -2,29 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Auth;
 use App\Services\MemberService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
     /**
      * 建構子
-     * 
-     * @param \App\Services\MemberService $memberService
+     *
      * @return void
      */
     public function __construct(
         private MemberService $memberService
-    ) {
-        
-    }
+    ) {}
 
     /**
      * 會員登入
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request)
@@ -45,14 +41,13 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => '登入失敗'
+            'message' => '登入失敗',
         ], 401);
     }
 
     /**
      * 會員登出
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function logout(Request $request)
@@ -67,14 +62,13 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return response()->json([
-            'message' => '登出成功'
+            'message' => '登出成功',
         ]);
     }
 
     /**
      * 取得目前登入的會員資訊
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function user(Request $request)
@@ -84,8 +78,7 @@ class AuthController extends Controller
 
     /**
      * 會員註冊
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function register(Request $request)

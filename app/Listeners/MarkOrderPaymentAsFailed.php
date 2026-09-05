@@ -14,26 +14,18 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class MarkOrderPaymentAsFailed implements ShouldQueue
 {
     /**
-     * @param \App\Repositories\PaymentTransactionRepository $paymentTransactionRepository
-     * @param \App\Repositories\OrderRepository $orderRepository
      * @return void
      */
     public function __construct(
         private PaymentTransactionRepository $paymentTransactionRepository,
         private OrderRepository $orderRepository,
-    ) {
-        
-    }
+    ) {}
 
-    /**
-     * @param \App\Events\PaymentFailed $event
-     * @return void
-     */
     public function handle(PaymentFailed $event): void
     {
         $paymentTransaction = $this->paymentTransactionRepository->first(['id', $event->paymentTransactionId]);
 
-        if (!$paymentTransaction instanceof PaymentTransaction) {
+        if (! $paymentTransaction instanceof PaymentTransaction) {
             throw new ModelNotFoundException("Payment transaction with ID {$event->paymentTransactionId} not found.");
         }
 
