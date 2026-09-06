@@ -4,10 +4,10 @@ namespace App\Listeners;
 
 use App\Events\ShipmentCreated;
 use App\Models\Shipment;
+use App\Notifications\ShipmentCreatedNotification;
 use App\Repositories\ShipmentRepository;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Psr\Log\LoggerInterface;
 
 class SendShipmentCreatedNotification implements ShouldQueue
 {
@@ -16,7 +16,6 @@ class SendShipmentCreatedNotification implements ShouldQueue
      */
     public function __construct(
         private ShipmentRepository $shipmentRepository,
-        private LoggerInterface $logger,
     ) {}
 
     public function handle(ShipmentCreated $event): void
@@ -27,9 +26,8 @@ class SendShipmentCreatedNotification implements ShouldQueue
             throw new ModelNotFoundException("Shipment with ID {$event->shipmentId} not found.");
         }
 
-        $this->logger->info('Shipment created notification is ready.', [
-            'shipment_id' => $shipment->id,
-            'order_id' => $shipment->order_id,
-        ]);
+        $shipment->loadMissing('order.member');
+
+        $shipment->order->member->notify(new ShipmentCreatedNotification($shipment));
     }
 }

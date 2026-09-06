@@ -154,5 +154,15 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(50)->by('orders:write:hour:'.$request->ip()),
             ];
         });
+
+        RateLimiter::for('payment-callbacks', function (Request $request): array {
+            $merchantTradeNo = trim((string) $request->input('MerchantTradeNo'));
+            $callbackKey = $merchantTradeNo !== '' ? $merchantTradeNo : $request->ip();
+
+            return [
+                Limit::perMinute(30)->by('payment-callbacks:callback:'.$callbackKey),
+                Limit::perMinute(300)->by('payment-callbacks:ip:'.$request->ip()),
+            ];
+        });
     }
 }

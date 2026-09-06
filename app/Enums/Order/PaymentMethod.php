@@ -10,12 +10,17 @@ enum PaymentMethod: int
     case CREDIT_CARD = 1;
 
     /**
-     * 現金
+     * ATM 轉帳
      */
-    case CASH = 2;
+    case ATM = 2;
 
     /**
-     * Line Pay
+     * 超商代碼
      */
-    case LINE_PAY = 3;
+    case CVS = 3;
+
+    /**
+     * 超商條碼
+     */
+    case BARCODE = 4;
 }

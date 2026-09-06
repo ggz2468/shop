@@ -33,6 +33,8 @@ class EcpayPaymentGateway implements PaymentGateway
      *         TradeDesc: string,
      *         ItemName: string,
      *         ReturnURL: string,
+     *         PaymentInfoURL?: string,
+     *         ClientRedirectURL?: string,
      *         ClientBackURL: string,
      *         ChoosePayment: string,
      *         EncryptType: int,
@@ -60,6 +62,14 @@ class EcpayPaymentGateway implements PaymentGateway
             'ChoosePayment' => $this->resolveChoosePayment($paymentTransaction->payment_method),
             'EncryptType' => 1,
         ];
+
+        if ($this->requiresPaymentInfoUrl($paymentTransaction->payment_method)) {
+            $params['PaymentInfoURL'] = $this->config->get('services.ecpay.payment_info_url')
+                ?? $params['ReturnURL'];
+            $params['ClientRedirectURL'] = $this->config->get('services.ecpay.client_redirect_url')
+                ?? $params['ClientBackURL'];
+        }
+
         $checkMacValue = $this->makeCheckMacValue($params);
 
         return [
@@ -73,26 +83,40 @@ class EcpayPaymentGateway implements PaymentGateway
     {
         return match ($paymentMethod) {
             PaymentMethod::CREDIT_CARD->value => 'Credit',
-            default => 'ALL',
+            PaymentMethod::ATM->value => 'ATM',
+            PaymentMethod::CVS->value => 'CVS',
+            PaymentMethod::BARCODE->value => 'BARCODE',
         };
     }
 
-    /**
-     * @param  array<string, mixed>  $params
-     */
-    private function makeCheckMacValue(array $params): string
+    private function requiresPaymentInfoUrl(int $paymentMethod): bool
     {
-        unset($params['CheckMacValue']);
+        return in_array($paymentMethod, [
+            PaymentMethod::ATM->value,
+            PaymentMethod::CVS->value,
+            PaymentMethod::BARCODE->value,
+        ], true);
+    }
 
-        uksort($params, 'strcasecmp');
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function makeCheckMacValue(array $payload): string
+    {
+        unset($payload['CheckMacValue']);
 
-        $encoded = http_build_query([
-            'HashKey' => $this->config->get('services.ecpay.hash_key'),
-            ...$params,
-            'HashIV' => $this->config->get('services.ecpay.hash_iv'),
-        ]);
+        uksort($payload, 'strcasecmp');
+
+        $encoded = 'HashKey='.$this->config->get('services.ecpay.hash_key')
+            .'&'.urldecode(http_build_query($payload))
+            .'&HashIV='.$this->config->get('services.ecpay.hash_iv');
 
         $encoded = strtolower(urlencode($encoded));
+        $encoded = str_replace(
+            ['%2d', '%5f', '%2e', '%21', '%2a', '%28', '%29'],
+            ['-', '_', '.', '!', '*', '(', ')'],
+            $encoded,
+        );
 
         return strtoupper(hash('sha256', $encoded));
     }

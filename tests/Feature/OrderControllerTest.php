@@ -359,8 +359,9 @@ class OrderControllerTest extends TestCase
         Notification::fake();
 
         $cases = [
-            [PaymentMethod::CASH, Provider::CASH, '01J3QS2AJMZV09DNXQ2EE4NM2L'],
-            [PaymentMethod::LINE_PAY, Provider::LINE_PAY, '01J3QS2AJMZV09DNXQ2EE4NM2M'],
+            [PaymentMethod::ATM, Provider::ECPAY, '01J3QS2AJMZV09DNXQ2EE4NM2N'],
+            [PaymentMethod::CVS, Provider::ECPAY, '01J3QS2AJMZV09DNXQ2EE4NM2P'],
+            [PaymentMethod::BARCODE, Provider::ECPAY, '01J3QS2AJMZV09DNXQ2EE4NM2Q'],
         ];
 
         foreach ($cases as [$paymentMethod, $provider, $idempotencyKey]) {

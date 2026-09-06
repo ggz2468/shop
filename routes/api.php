@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\EcpayPaymentCallbackController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProductController;
@@ -61,3 +62,6 @@ Route::middleware(['auth:sanctum', 'throttle:orders'])->prefix('orders')->group(
     Route::get('/{order}', [OrderController::class, 'show']);
     Route::patch('/{order}/cancel', [OrderController::class, 'cancel']);
 });
+
+Route::post('/payment-callbacks/ecpay', EcpayPaymentCallbackController::class)
+    ->middleware('throttle:payment-callbacks');

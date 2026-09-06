@@ -50,6 +50,8 @@ return [
         'hash_iv' => env('ECPAY_HASH_IV'),
         'payment_action_url' => env('ECPAY_PAYMENT_ACTION_URL'),
         'return_url' => env('ECPAY_RETURN_URL'),
+        'payment_info_url' => env('ECPAY_PAYMENT_INFO_URL'),
+        'client_redirect_url' => env('ECPAY_CLIENT_REDIRECT_URL'),
         'client_back_url' => env('ECPAY_CLIENT_BACK_URL'),
     ],
 

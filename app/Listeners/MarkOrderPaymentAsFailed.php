@@ -8,10 +8,9 @@ use App\Events\PaymentFailed;
 use App\Models\PaymentTransaction;
 use App\Repositories\OrderRepository;
 use App\Repositories\PaymentTransactionRepository;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class MarkOrderPaymentAsFailed implements ShouldQueue
+class MarkOrderPaymentAsFailed
 {
     /**
      * @return void
@@ -35,11 +34,17 @@ class MarkOrderPaymentAsFailed implements ShouldQueue
             $responsePayload['reason'] = $event->reason;
         }
 
-        $this->paymentTransactionRepository->update(['id', $paymentTransaction->id], [
+        $paymentTransactionData = [
             'status' => Status::FAILED->value,
             'response_payload' => $responsePayload === [] ? null : $responsePayload,
             'failed_at' => now(),
-        ]);
+        ];
+
+        if (! empty($event->providerPayload['TradeNo'])) {
+            $paymentTransactionData['provider_transaction_id'] = (string) $event->providerPayload['TradeNo'];
+        }
+
+        $this->paymentTransactionRepository->update(['id', $paymentTransaction->id], $paymentTransactionData);
         $this->orderRepository->update(['id', $paymentTransaction->order_id], [
             'payment_status' => PaymentStatus::FAILED->value,
         ]);

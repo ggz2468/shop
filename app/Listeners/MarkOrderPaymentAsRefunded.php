@@ -8,10 +8,9 @@ use App\Events\PaymentRefunded;
 use App\Models\PaymentTransaction;
 use App\Repositories\OrderRepository;
 use App\Repositories\PaymentTransactionRepository;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class MarkOrderPaymentAsRefunded implements ShouldQueue
+class MarkOrderPaymentAsRefunded
 {
     /**
      * @return void
@@ -36,6 +35,10 @@ class MarkOrderPaymentAsRefunded implements ShouldQueue
 
         if ($event->providerPayload !== null) {
             $paymentTransactionData['response_payload'] = $event->providerPayload;
+
+            if (! empty($event->providerPayload['TradeNo'])) {
+                $paymentTransactionData['provider_transaction_id'] = (string) $event->providerPayload['TradeNo'];
+            }
         }
 
         $this->paymentTransactionRepository->update(['id', $paymentTransaction->id], $paymentTransactionData);

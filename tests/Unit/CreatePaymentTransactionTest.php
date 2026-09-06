@@ -91,8 +91,9 @@ class CreatePaymentTransactionTest extends TestCase
 
         $cases = [
             [PaymentMethod::CREDIT_CARD, Provider::ECPAY],
-            [PaymentMethod::CASH, Provider::CASH],
-            [PaymentMethod::LINE_PAY, Provider::LINE_PAY],
+            [PaymentMethod::ATM, Provider::ECPAY],
+            [PaymentMethod::CVS, Provider::ECPAY],
+            [PaymentMethod::BARCODE, Provider::ECPAY],
         ];
 
         foreach ($cases as [$paymentMethod, $provider]) {

@@ -22,11 +22,9 @@ return new class extends Migration
 
         DB::table('payment_transactions')->update([
             'provider_code' => DB::raw(sprintf(
-                "CASE provider WHEN 'ecpay' THEN %d WHEN 'newebpay' THEN %d WHEN 'line_pay' THEN %d WHEN 'cash' THEN %d ELSE %d END",
+                "CASE provider WHEN 'ecpay' THEN %d WHEN 'newebpay' THEN %d ELSE %d END",
                 PaymentTransactionProvider::ECPAY->value,
                 PaymentTransactionProvider::NEWEBPAY->value,
-                PaymentTransactionProvider::LINE_PAY->value,
-                PaymentTransactionProvider::CASH->value,
                 PaymentTransactionProvider::ECPAY->value,
             )),
         ]);
@@ -87,11 +85,9 @@ return new class extends Migration
 
         DB::table('payment_transactions')->update([
             'provider_name' => DB::raw(sprintf(
-                "CASE provider WHEN %d THEN 'ecpay' WHEN %d THEN 'newebpay' WHEN %d THEN 'line_pay' WHEN %d THEN 'cash' ELSE 'ecpay' END",
+                "CASE provider WHEN %d THEN 'ecpay' WHEN %d THEN 'newebpay' ELSE 'ecpay' END",
                 PaymentTransactionProvider::ECPAY->value,
                 PaymentTransactionProvider::NEWEBPAY->value,
-                PaymentTransactionProvider::LINE_PAY->value,
-                PaymentTransactionProvider::CASH->value,
             )),
         ]);
 

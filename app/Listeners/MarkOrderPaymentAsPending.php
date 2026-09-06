@@ -4,13 +4,13 @@ namespace App\Listeners;
 
 use App\Enums\Order\PaymentStatus;
 use App\Enums\PaymentTransaction\Status;
-use App\Events\PaymentSucceeded;
+use App\Events\PaymentAuthorized;
 use App\Models\PaymentTransaction;
 use App\Repositories\OrderRepository;
 use App\Repositories\PaymentTransactionRepository;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class MarkOrderAsPaid
+class MarkOrderPaymentAsPending
 {
     /**
      * @return void
@@ -20,7 +20,7 @@ class MarkOrderAsPaid
         private OrderRepository $orderRepository,
     ) {}
 
-    public function handle(PaymentSucceeded $event): void
+    public function handle(PaymentAuthorized $event): void
     {
         $paymentTransaction = $this->paymentTransactionRepository->first(['id', $event->paymentTransactionId]);
 
@@ -29,8 +29,7 @@ class MarkOrderAsPaid
         }
 
         $paymentTransactionData = [
-            'status' => Status::PAID->value,
-            'paid_at' => now(),
+            'status' => Status::AUTHORIZED->value,
         ];
 
         if ($event->providerPayload !== null) {
@@ -43,7 +42,7 @@ class MarkOrderAsPaid
 
         $this->paymentTransactionRepository->update(['id', $paymentTransaction->id], $paymentTransactionData);
         $this->orderRepository->update(['id', $paymentTransaction->order_id], [
-            'payment_status' => PaymentStatus::PAID->value,
+            'payment_status' => PaymentStatus::PENDING->value,
         ]);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Listeners;
 
-use App\Enums\Order\PaymentMethod;
 use App\Enums\PaymentTransaction\Provider;
 use App\Enums\PaymentTransaction\Status;
 use App\Events\OrderCreated;
@@ -41,7 +40,7 @@ class CreatePaymentTransaction implements ShouldQueue
 
         $paymentTransaction = $this->paymentTransactionRepository->create([
             'order_id' => $order->id,
-            'provider' => $this->resolveProvider((int) $order->payment_method),
+            'provider' => Provider::ECPAY->value,
             'merchant_trade_no' => $this->makeMerchantTradeNo($order->number),
             'amount' => $order->total_amount,
             'currency' => 'TWD',
@@ -53,15 +52,6 @@ class CreatePaymentTransaction implements ShouldQueue
         ]);
 
         $this->events->dispatch(new PaymentInitiated($paymentTransaction->id));
-    }
-
-    private function resolveProvider(int $paymentMethod): int
-    {
-        return match ($paymentMethod) {
-            PaymentMethod::LINE_PAY->value => Provider::LINE_PAY->value,
-            PaymentMethod::CASH->value => Provider::CASH->value,
-            default => Provider::ECPAY->value,
-        };
     }
 
     private function makeMerchantTradeNo(string $orderNumber): string
