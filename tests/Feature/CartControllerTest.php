@@ -40,12 +40,7 @@ class CartControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'items' => [
-                        '*' => [
-                            'product_variant_id',
-                            'quantity',
-                        ],
-                    ],
+                    'items',
                     'total_quantity',
                 ],
             ])
@@ -70,10 +65,14 @@ class CartControllerTest extends TestCase
             [
                 'product_variant_id' => 1,
                 'quantity' => 2,
+                'product_name' => '經典白襯衫',
+                'product_image_path' => '/images/products/shirt.svg',
             ],
             [
                 'product_variant_id' => 2,
                 'quantity' => 1,
+                'product_name' => '直筒牛仔褲',
+                'product_image_path' => '/images/products/jeans.svg',
             ],
         ];
 
@@ -88,6 +87,8 @@ class CartControllerTest extends TestCase
                         '*' => [
                             'product_variant_id',
                             'quantity',
+                            'product_name',
+                            'product_image_path',
                         ],
                     ],
                     'total_quantity',
@@ -128,6 +129,8 @@ class CartControllerTest extends TestCase
             [
                 'product_variant_id' => 1,
                 'quantity' => 2,
+                'product_name' => '經典白襯衫',
+                'product_image_path' => '/images/products/shirt.svg',
             ],
         ]);
 
@@ -140,6 +143,8 @@ class CartControllerTest extends TestCase
                         '*' => [
                             'product_variant_id',
                             'quantity',
+                            'product_name',
+                            'product_image_path',
                         ],
                     ],
                     'total_quantity',
@@ -159,14 +164,20 @@ class CartControllerTest extends TestCase
             [
                 'product_variant_id' => 1,
                 'quantity' => 2,
+                'product_name' => '經典白襯衫',
+                'product_image_path' => '/images/products/shirt.svg',
             ],
             [
                 'product_variant_id' => 2,
                 'quantity' => 5,
+                'product_name' => '直筒牛仔褲',
+                'product_image_path' => '/images/products/jeans.svg',
             ],
             [
                 'product_variant_id' => 3,
                 'quantity' => 1,
+                'product_name' => '黑色皮帶',
+                'product_image_path' => '/images/products/belt.svg',
             ],
         ]);
 
@@ -323,6 +334,8 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'product_variant_id' => $product->id,
                     'quantity' => 2,
+                    'product_name' => $product->product->name,
+                    'product_image_path' => '/images/products/default.svg',
                 ],
             ]);
 
@@ -339,6 +352,8 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'product_variant_id' => $product->id,
                     'quantity' => 2,
+                    'product_name' => $product->product->name,
+                    'product_image_path' => '/images/products/default.svg',
                 ],
             ]);
     }
@@ -373,6 +388,8 @@ class CartControllerTest extends TestCase
                         [
                             'product_variant_id' => $product->id,
                             'quantity' => 2,
+                            'product_name' => $product->product->name,
+                            'product_image_path' => '/images/products/default.svg',
                         ],
                     ],
                     'total_quantity' => 2,
@@ -436,6 +453,8 @@ class CartControllerTest extends TestCase
                         [
                             'product_variant_id' => $product->id,
                             'quantity' => 3,
+                            'product_name' => $product->product->name,
+                            'product_image_path' => '/images/products/default.svg',
                         ],
                     ],
                     'total_quantity' => 3,
@@ -636,6 +655,8 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'product_variant_id' => $product->id,
                     'quantity' => 3,
+                    'product_name' => $product->product->name,
+                    'product_image_path' => '/images/products/default.svg',
                 ],
             ]);
 
@@ -651,6 +672,8 @@ class CartControllerTest extends TestCase
                 'data' => [
                     'product_variant_id' => $product->id,
                     'quantity' => 3,
+                    'product_name' => $product->product->name,
+                    'product_image_path' => '/images/products/default.svg',
                 ],
             ]);
     }
@@ -689,6 +712,8 @@ class CartControllerTest extends TestCase
                         [
                             'product_variant_id' => $product->id,
                             'quantity' => 4,
+                            'product_name' => $product->product->name,
+                            'product_image_path' => '/images/products/default.svg',
                         ],
                     ],
                     'total_quantity' => 4,
@@ -816,6 +841,8 @@ class CartControllerTest extends TestCase
                         [
                             'product_variant_id' => $product->id,
                             'quantity' => 5,
+                            'product_name' => $product->product->name,
+                            'product_image_path' => '/images/products/default.svg',
                         ],
                     ],
                     'total_quantity' => 5,
@@ -956,6 +983,8 @@ class CartControllerTest extends TestCase
                         [
                             'product_variant_id' => $remainingProduct->id,
                             'quantity' => 3,
+                            'product_name' => $remainingProduct->product->name,
+                            'product_image_path' => '/images/products/default.svg',
                         ],
                     ],
                     'total_quantity' => 3,
@@ -1113,6 +1142,8 @@ class CartControllerTest extends TestCase
                         [
                             'product_variant_id' => $product->id,
                             'quantity' => 5,
+                            'product_name' => $product->product->name,
+                            'product_image_path' => '/images/products/default.svg',
                         ],
                     ],
                     'total_quantity' => 5,
@@ -1304,6 +1335,8 @@ class CartControllerTest extends TestCase
                         [
                             'product_variant_id' => $product->id,
                             'quantity' => 5,
+                            'product_name' => $product->product->name,
+                            'product_image_path' => '/images/products/default.svg',
                         ],
                     ],
                     'total_quantity' => 5,

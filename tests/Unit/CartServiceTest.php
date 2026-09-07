@@ -2,8 +2,13 @@
 
 namespace Tests\Unit;
 
+use App\Models\Image;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Repositories\ProductVariantRepository;
 use App\Services\CartService;
 use App\Stores\CartStore;
+use Illuminate\Support\Collection;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -18,19 +23,23 @@ class CartServiceTest extends TestCase
     }
 
     /**
-     * 取得購物車內容：應依會員 id 從 CartStore 取出產品項目。
+     * 取得購物車內容：應依會員 id 從 CartStore 取出產品項目，並補上產品名稱與圖片。
      */
-    public function test_get_cart_items_returns_items_from_cart_store_for_member(): void
+    public function test_get_cart_items_returns_items_with_product_name_and_image_path(): void
     {
         $memberId = 1;
         $cartItems = [
             [
                 'product_variant_id' => 1,
                 'quantity' => 2,
+                'product_name' => '經典白襯衫',
+                'product_image_path' => '/images/products/shirt.svg',
             ],
             [
                 'product_variant_id' => 2,
                 'quantity' => 1,
+                'product_name' => '直筒牛仔褲',
+                'product_image_path' => '/images/products/jeans.svg',
             ],
         ];
 
@@ -40,11 +49,99 @@ class CartServiceTest extends TestCase
             ->with($memberId)
             ->andReturn($cartItems);
 
-        $service = new CartService($cartStore);
+        $productVariantRepository = Mockery::mock(ProductVariantRepository::class);
+        $productVariantRepository->shouldReceive('findManyWithProductImages')
+            ->once()
+            ->with([1, 2])
+            ->andReturn(new Collection([
+                1 => $this->makeProductVariant(1, '經典白襯衫', '/images/products/shirt.svg'),
+                2 => $this->makeProductVariant(2, '直筒牛仔褲', '/images/products/jeans.svg'),
+            ]));
+
+        $service = $this->makeService($cartStore, $productVariantRepository);
 
         $result = $service->getCartItems($memberId);
 
-        $this->assertSame($cartItems, $result);
+        $this->assertSame([
+            [
+                'product_variant_id' => 1,
+                'quantity' => 2,
+                'product_name' => '經典白襯衫',
+                'product_image_path' => '/images/products/shirt.svg',
+            ],
+            [
+                'product_variant_id' => 2,
+                'quantity' => 1,
+                'product_name' => '直筒牛仔褲',
+                'product_image_path' => '/images/products/jeans.svg',
+            ],
+        ], $result);
+    }
+
+    /**
+     * 取得購物車內容：購物車為空時不應查詢產品規格資料。
+     */
+    public function test_get_cart_items_does_not_query_product_variants_when_cart_is_empty(): void
+    {
+        $memberId = 1;
+
+        $cartStore = Mockery::mock(CartStore::class);
+        $cartStore->shouldReceive('getItems')
+            ->once()
+            ->with($memberId)
+            ->andReturn([]);
+
+        $productVariantRepository = Mockery::mock(ProductVariantRepository::class);
+        $productVariantRepository->shouldReceive('findManyWithProductImages')->never();
+
+        $service = $this->makeService($cartStore, $productVariantRepository);
+
+        $result = $service->getCartItems($memberId);
+
+        $this->assertSame([], $result);
+    }
+
+    /**
+     * 取得購物車內容：產品沒有圖片時應使用預設圖片路徑。
+     */
+    public function test_get_cart_items_uses_default_image_path_when_product_has_no_image(): void
+    {
+        $memberId = 1;
+        $cartItems = [
+            [
+                'product_variant_id' => 1,
+                'quantity' => 2,
+                'product_name' => '經典白襯衫',
+                'product_image_path' => '/images/products/default.svg',
+            ],
+        ];
+
+        $cartStore = Mockery::mock(CartStore::class);
+        $cartStore->shouldReceive('getItems')
+            ->once()
+            ->with($memberId)
+            ->andReturn($cartItems);
+
+        $productVariantRepository = Mockery::mock(ProductVariantRepository::class);
+        $productVariantRepository->shouldReceive('findManyWithProductImages')
+            ->once()
+            ->with([1])
+            ->andReturn(new Collection([
+                1 => $this->makeProductVariant(1, '經典白襯衫'),
+            ]));
+
+        $service = $this->makeService($cartStore, $productVariantRepository);
+
+        $result = $service->getCartItems($memberId);
+
+        $this->assertSame([
+            [
+                'product_variant_id' => 1,
+                'quantity' => 2,
+                'product_name' => '經典白襯衫',
+                'product_image_path' => '/images/products/default.svg',
+            ],
+        ], $result);
     }
 
     /**
@@ -58,6 +155,8 @@ class CartServiceTest extends TestCase
         $cartItem = [
             'product_variant_id' => $productId,
             'quantity' => $quantity,
+            'product_name' => '經典白襯衫',
+            'product_image_path' => '/images/products/shirt.svg',
         ];
 
         $cartStore = Mockery::mock(CartStore::class);
@@ -66,7 +165,7 @@ class CartServiceTest extends TestCase
             ->with($memberId, $productId, $quantity)
             ->andReturn($cartItem);
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->storeCartItem($memberId, $productId, $quantity);
 
@@ -92,7 +191,7 @@ class CartServiceTest extends TestCase
             ->with($memberId, $productId, $quantity)
             ->andReturn(false);
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->storeCartItem($memberId, $productId, $quantity);
 
@@ -114,6 +213,8 @@ class CartServiceTest extends TestCase
         $cartItem = [
             'product_variant_id' => $productId,
             'quantity' => $quantity,
+            'product_name' => '經典白襯衫',
+            'product_image_path' => '/images/products/shirt.svg',
         ];
 
         $cartStore = Mockery::mock(CartStore::class);
@@ -122,7 +223,7 @@ class CartServiceTest extends TestCase
             ->with($memberId, $productId, $quantity)
             ->andReturn($cartItem);
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->updateCartItem($memberId, $productId, $quantity);
 
@@ -148,7 +249,7 @@ class CartServiceTest extends TestCase
             ->with($memberId, $productId, $quantity)
             ->andReturn(null);
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->updateCartItem($memberId, $productId, $quantity);
 
@@ -174,7 +275,7 @@ class CartServiceTest extends TestCase
             ->with($memberId, $productId, $quantity)
             ->andReturn(false);
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->updateCartItem($memberId, $productId, $quantity);
 
@@ -202,7 +303,7 @@ class CartServiceTest extends TestCase
             ->with($memberId, $productId)
             ->andReturn($cartItem);
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->destroyCartItem($memberId, $productId);
 
@@ -227,7 +328,7 @@ class CartServiceTest extends TestCase
             ->with($memberId, $productId)
             ->andReturn(null);
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->destroyCartItem($memberId, $productId);
 
@@ -252,7 +353,7 @@ class CartServiceTest extends TestCase
             ->with($memberId, $productId)
             ->andReturn(false);
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->destroyCartItem($memberId, $productId);
 
@@ -276,7 +377,7 @@ class CartServiceTest extends TestCase
             ->with($memberId)
             ->andReturnNull();
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->clearCart($memberId);
 
@@ -300,7 +401,7 @@ class CartServiceTest extends TestCase
             ->with($memberId)
             ->andThrow(new RuntimeException('清空會員購物車失敗'));
 
-        $service = new CartService($cartStore);
+        $service = $this->makeService($cartStore);
 
         $result = $service->clearCart($memberId);
 
@@ -309,5 +410,35 @@ class CartServiceTest extends TestCase
             'message' => '會員購物車清空失敗，請稍後再試。',
         ], $result);
         $this->assertArrayNotHasKey('data', $result);
+    }
+
+    private function makeService(CartStore $cartStore, ?ProductVariantRepository $productVariantRepository = null): CartService
+    {
+        return new CartService(
+            $cartStore,
+            $productVariantRepository ?? Mockery::mock(ProductVariantRepository::class),
+        );
+    }
+
+    private function makeProductVariant(int $id, string $productName, ?string $imagePath = null): ProductVariant
+    {
+        $product = new Product;
+        $product->name = $productName;
+
+        $images = new Collection;
+
+        if ($imagePath !== null) {
+            $image = new Image;
+            $image->url = $imagePath;
+            $images->push($image);
+        }
+
+        $product->setRelation('images', $images);
+
+        $productVariant = new ProductVariant;
+        $productVariant->id = $id;
+        $productVariant->setRelation('product', $product);
+
+        return $productVariant;
     }
 }
