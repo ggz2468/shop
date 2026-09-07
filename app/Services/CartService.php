@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Stores\CartStore;
+use App\Repositories\ProductVariantRepository;
 use Throwable;
 
 class CartService
@@ -14,16 +15,32 @@ class CartService
      */
     public function __construct(
         private CartStore $cartStore,
+        private ProductVariantRepository $productVariantRepository,
     ) {}
 
     /**
-     * 取得會員購物車內容
+     * 取得會員購物車內容，並附上各品項的產品名稱與圖片
      *
      * @return array<int, array<string, mixed>>
      */
     public function getCartItems(int $memberId): array
     {
-        return $this->cartStore->getItems($memberId);
+        $items = $this->cartStore->getItems($memberId);
+
+        if ($items === []) {
+            return [];
+        }
+
+        $variants = $this->productVariantRepository->findManyWithProductImages(array_column($items, 'product_variant_id'));
+
+        return array_map(function (array $item) use ($variants) {
+            $product = $variants->get($item['product_variant_id'])?->product;
+
+            $item['product_name'] = $product?->name;
+            $item['product_image_path'] = $product?->images->first()?->url ?? '/images/products/default.svg';
+
+            return $item;
+        }, $items);
     }
 
     /**
