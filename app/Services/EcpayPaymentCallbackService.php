@@ -19,6 +19,17 @@ use Throwable;
 class EcpayPaymentCallbackService
 {
     /**
+     * 授權付款類型前綴
+     *
+     * @var string[]
+     */
+    private const AUTHORIZED_PAYMENT_TYPE_PREFIXES = [
+        'ATM_',
+        'CVS_',
+        'BARCODE_',
+    ];
+
+    /**
      * 建構子
      *
      * @return void
@@ -242,8 +253,12 @@ class EcpayPaymentCallbackService
 
         $paymentType = (string) ($payload['PaymentType'] ?? '');
 
-        return str_starts_with($paymentType, 'ATM_')
-            || str_starts_with($paymentType, 'CVS_')
-            || str_starts_with($paymentType, 'BARCODE_');
+        foreach (self::AUTHORIZED_PAYMENT_TYPE_PREFIXES as $prefix) {
+            if (str_starts_with($paymentType, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

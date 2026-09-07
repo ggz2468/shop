@@ -193,6 +193,299 @@ class EcpayPaymentCallbackControllerTest extends TestCase
     }
 
     /**
+     * 綠界付款回呼：找不到付款交易時應拒絕 callback。
+     */
+    public function test_callback_rejects_unknown_payment_transaction(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906UNKNOWN',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertStatus(404)
+            ->assertSeeText('0|Payment transaction not found');
+    }
+
+    /**
+     * 綠界付款回呼：缺少必要欄位時應拒絕 callback。
+     */
+    public function test_callback_rejects_missing_required_field(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906MISSING',
+        ]);
+        unset($payload['TradeNo']);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertStatus(400)
+            ->assertSeeText('0|Missing required field: TradeNo');
+    }
+
+    /**
+     * 綠界付款回呼：MerchantID 不符時應拒絕 callback。
+     */
+    public function test_callback_rejects_invalid_merchant_id_without_updating_payment_state(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $paymentTransaction = $this->createEcpayPaymentTransaction([
+            'merchant_trade_no' => 'PAY20260906REAL11',
+            'amount' => 1000,
+        ]);
+        $payload = $this->signedCallbackPayload([
+            'MerchantID' => '9999999',
+            'MerchantTradeNo' => 'PAY20260906REAL11',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertStatus(400)
+            ->assertSeeText('0|Invalid MerchantID');
+
+        $paymentTransaction->refresh();
+        $this->assertSame(Status::PENDING->value, $paymentTransaction->status);
+        $this->assertNull($paymentTransaction->response_payload);
+    }
+
+    /**
+     * 綠界付款回呼：TradeAmt 不是純數字時應拒絕 callback。
+     */
+    public function test_callback_rejects_invalid_trade_amount_format_without_updating_payment_state(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $paymentTransaction = $this->createEcpayPaymentTransaction([
+            'merchant_trade_no' => 'PAY20260906REAL12',
+            'amount' => 1000,
+        ]);
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906REAL12',
+            'TradeAmt' => '1000.00',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertStatus(400)
+            ->assertSeeText('0|Invalid TradeAmt');
+
+        $paymentTransaction->refresh();
+        $this->assertSame(Status::PENDING->value, $paymentTransaction->status);
+        $this->assertNull($paymentTransaction->response_payload);
+    }
+
+    /**
+     * 綠界付款回呼：已授權交易收到實際付款成功 callback 時應轉為已付款。
+     */
+    public function test_callback_processes_success_payload_after_non_instant_payment_was_authorized(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $paymentTransaction = $this->createEcpayPaymentTransaction([
+            'merchant_trade_no' => 'PAY20260906REAL07',
+            'amount' => 1000,
+            'payment_method' => PaymentMethod::ATM->value,
+            'status' => Status::AUTHORIZED->value,
+            'provider_transaction_id' => '250906150000107',
+            'response_payload' => [
+                'RtnCode' => '2',
+                'PaymentType' => 'ATM_TAISHIN',
+                'TradeNo' => '250906150000107',
+            ],
+        ]);
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906REAL07',
+            'RtnCode' => '1',
+            'RtnMsg' => 'Succeeded',
+            'PaymentType' => 'ATM_TAISHIN',
+            'TradeNo' => '250906150000107',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertOk()
+            ->assertSeeText('1|OK');
+
+        $paymentTransaction->refresh();
+        $this->assertSame(Status::PAID->value, $paymentTransaction->status);
+        $this->assertSame(PaymentStatus::PAID->value, $paymentTransaction->order->refresh()->payment_status);
+        $this->assertSame('1', $paymentTransaction->response_payload['RtnCode']);
+    }
+
+    /**
+     * 綠界付款回呼：已付款交易收到成功重送通知時應直接確認。
+     */
+    public function test_callback_acknowledges_paid_duplicate_without_reprocessing(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $originalPayload = [
+            'RtnCode' => '1',
+            'TradeNo' => '250906150000113',
+        ];
+        $paymentTransaction = $this->createEcpayPaymentTransaction([
+            'merchant_trade_no' => 'PAY20260906REAL13',
+            'amount' => 1000,
+            'status' => Status::PAID->value,
+            'provider_transaction_id' => '250906150000113',
+            'response_payload' => $originalPayload,
+        ]);
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906REAL13',
+            'RtnCode' => '1',
+            'TradeNo' => '250906150000113',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertOk()
+            ->assertSeeText('1|OK');
+
+        $paymentTransaction->refresh();
+        $this->assertSame(Status::PAID->value, $paymentTransaction->status);
+        $this->assertEquals($originalPayload, $paymentTransaction->response_payload);
+    }
+
+    /**
+     * 綠界付款回呼：已授權交易收到取號成功重送通知時應直接確認，不重複改寫狀態。
+     */
+    public function test_callback_acknowledges_authorized_duplicate_without_reprocessing(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $originalPayload = [
+            'RtnCode' => '2',
+            'PaymentType' => 'ATM_TAISHIN',
+            'TradeNo' => '250906150000108',
+        ];
+        $paymentTransaction = $this->createEcpayPaymentTransaction([
+            'merchant_trade_no' => 'PAY20260906REAL08',
+            'amount' => 1000,
+            'payment_method' => PaymentMethod::ATM->value,
+            'status' => Status::AUTHORIZED->value,
+            'provider_transaction_id' => '250906150000108',
+            'response_payload' => $originalPayload,
+        ]);
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906REAL08',
+            'RtnCode' => '2',
+            'RtnMsg' => 'Get VirtualAccount Succeeded Again',
+            'PaymentType' => 'ATM_TAISHIN',
+            'TradeNo' => '250906150000108',
+            'PaymentDate' => '',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertOk()
+            ->assertSeeText('1|OK');
+
+        $paymentTransaction->refresh();
+        $this->assertSame(Status::AUTHORIZED->value, $paymentTransaction->status);
+        $this->assertEquals($originalPayload, $paymentTransaction->response_payload);
+        $this->assertSame(PaymentStatus::UNPAID->value, $paymentTransaction->order->refresh()->payment_status);
+    }
+
+    /**
+     * 綠界付款回呼：已授權交易收到失敗 callback 時應視為狀態衝突。
+     */
+    public function test_callback_rejects_failed_payload_after_non_instant_payment_was_authorized(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $paymentTransaction = $this->createEcpayPaymentTransaction([
+            'merchant_trade_no' => 'PAY20260906REAL09',
+            'amount' => 1000,
+            'payment_method' => PaymentMethod::ATM->value,
+            'status' => Status::AUTHORIZED->value,
+        ]);
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906REAL09',
+            'RtnCode' => '10100073',
+            'RtnMsg' => 'Paid failed',
+            'PaymentType' => 'ATM_TAISHIN',
+            'TradeNo' => '250906150000109',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertStatus(400)
+            ->assertSeeText('0|Payment callback status conflict');
+
+        $paymentTransaction->refresh();
+        $this->assertSame(Status::AUTHORIZED->value, $paymentTransaction->status);
+        $this->assertSame(PaymentStatus::UNPAID->value, $paymentTransaction->order->refresh()->payment_status);
+    }
+
+    /**
+     * 綠界付款回呼：已失敗交易收到失敗重送通知時應直接確認。
+     */
+    public function test_callback_acknowledges_failed_duplicate_without_reprocessing(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $originalPayload = [
+            'RtnCode' => '10100073',
+            'reason' => 'Paid failed',
+        ];
+        $paymentTransaction = $this->createEcpayPaymentTransaction([
+            'merchant_trade_no' => 'PAY20260906REAL10',
+            'amount' => 1000,
+            'status' => Status::FAILED->value,
+            'response_payload' => $originalPayload,
+        ]);
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906REAL10',
+            'RtnCode' => '10100073',
+            'RtnMsg' => 'Paid failed again',
+            'TradeNo' => '250906150000110',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertOk()
+            ->assertSeeText('1|OK');
+
+        $paymentTransaction->refresh();
+        $this->assertSame(Status::FAILED->value, $paymentTransaction->status);
+        $this->assertEquals($originalPayload, $paymentTransaction->response_payload);
+    }
+
+    /**
+     * 綠界付款回呼：已失敗交易收到成功 callback 時應視為狀態衝突。
+     */
+    public function test_callback_rejects_success_payload_after_payment_was_failed(): void
+    {
+        Notification::fake();
+        $this->setEcpayConfig();
+        $paymentTransaction = $this->createEcpayPaymentTransaction([
+            'merchant_trade_no' => 'PAY20260906REAL14',
+            'amount' => 1000,
+            'status' => Status::FAILED->value,
+        ]);
+        $payload = $this->signedCallbackPayload([
+            'MerchantTradeNo' => 'PAY20260906REAL14',
+            'RtnCode' => '1',
+            'RtnMsg' => 'Succeeded',
+            'TradeNo' => '250906150000114',
+        ]);
+
+        $response = $this->post('/api/payment-callbacks/ecpay', $payload);
+
+        $response->assertStatus(400)
+            ->assertSeeText('0|Payment callback status conflict');
+
+        $paymentTransaction->refresh();
+        $this->assertSame(Status::FAILED->value, $paymentTransaction->status);
+        $this->assertNull($paymentTransaction->response_payload);
+    }
+
+    /**
      * 綠界付款回呼：成功處理時應回傳綠界要求的純文字成功內容。
      */
     public function test_callback_returns_ecpay_success_response_when_service_accepts_payload(): void
