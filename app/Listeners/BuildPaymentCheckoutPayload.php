@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Gateways\Payments\PaymentGatewayManager;
 use App\Events\PaymentInitiated;
+use App\Gateways\Payments\PaymentGatewayManager;
 use App\Models\PaymentTransaction;
 use App\Repositories\PaymentTransactionRepository;
 use Illuminate\Contracts\Queue\ShouldQueue;

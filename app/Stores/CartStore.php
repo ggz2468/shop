@@ -194,7 +194,6 @@ class CartStore
     /**
      * 清空會員購物車
      *
-     *
      * @throws \RuntimeException
      */
     public function clearCart(int $memberId): void
