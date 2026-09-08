@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
+use App\Gateways\Payments\PaymentGatewayManager;
 use App\Events\PaymentInitiated;
-use App\Gateways\Payments\EcpayPaymentGateway;
 use App\Models\PaymentTransaction;
 use App\Repositories\PaymentTransactionRepository;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,7 +17,7 @@ class BuildPaymentCheckoutPayload implements ShouldQueue
      */
     public function __construct(
         private PaymentTransactionRepository $paymentTransactionRepository,
-        private EcpayPaymentGateway $ecpayPaymentGateway,
+        private PaymentGatewayManager $paymentGatewayManager,
         private LoggerInterface $logger,
     ) {}
 
@@ -29,7 +29,9 @@ class BuildPaymentCheckoutPayload implements ShouldQueue
             throw new ModelNotFoundException("Payment transaction with ID {$event->paymentTransactionId} not found.");
         }
 
-        $paymentRequest = $this->ecpayPaymentGateway->buildPaymentRequest($paymentTransaction);
+        $paymentRequest = $this->paymentGatewayManager
+            ->driver($paymentTransaction->provider)
+            ->buildPaymentRequest($paymentTransaction);
 
         $this->paymentTransactionRepository->update(['id', $paymentTransaction->id], [
             'request_payload' => $paymentRequest['params'],

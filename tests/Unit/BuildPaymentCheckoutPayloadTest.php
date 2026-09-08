@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Events\PaymentInitiated;
 use App\Gateways\Payments\EcpayPaymentGateway;
+use App\Gateways\Payments\PaymentGatewayManager;
 use App\Listeners\BuildPaymentCheckoutPayload;
 use App\Models\PaymentTransaction;
 use App\Repositories\PaymentTransactionRepository;
@@ -49,6 +50,11 @@ class BuildPaymentCheckoutPayloadTest extends TestCase
             ->once()
             ->with(Mockery::on(fn ($argument): bool => $argument instanceof PaymentTransaction && $argument->id === $paymentTransaction->id))
             ->andReturn($paymentRequest);
+        $paymentGatewayManager = Mockery::mock(PaymentGatewayManager::class);
+        $paymentGatewayManager->shouldReceive('driver')
+            ->once()
+            ->with($paymentTransaction->provider)
+            ->andReturn($ecpayPaymentGateway);
 
         $logger = Mockery::mock(LoggerInterface::class);
         $logger->shouldReceive('info')
@@ -57,7 +63,7 @@ class BuildPaymentCheckoutPayloadTest extends TestCase
 
         $listener = new BuildPaymentCheckoutPayload(
             new PaymentTransactionRepository,
-            $ecpayPaymentGateway,
+            $paymentGatewayManager,
             $logger,
         );
 
@@ -78,15 +84,15 @@ class BuildPaymentCheckoutPayloadTest extends TestCase
      */
     public function test_handle_throws_model_not_found_exception_when_payment_transaction_is_missing(): void
     {
-        $ecpayPaymentGateway = Mockery::mock(EcpayPaymentGateway::class);
-        $ecpayPaymentGateway->shouldReceive('buildPaymentRequest')->never();
+        $paymentGatewayManager = Mockery::mock(PaymentGatewayManager::class);
+        $paymentGatewayManager->shouldReceive('driver')->never();
 
         $logger = Mockery::mock(LoggerInterface::class);
         $logger->shouldReceive('info')->never();
 
         $listener = new BuildPaymentCheckoutPayload(
             new PaymentTransactionRepository,
-            $ecpayPaymentGateway,
+            $paymentGatewayManager,
             $logger,
         );
 

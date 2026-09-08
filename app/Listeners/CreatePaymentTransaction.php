@@ -9,9 +9,11 @@ use App\Events\PaymentInitiated;
 use App\Models\Order;
 use App\Repositories\OrderRepository;
 use App\Repositories\PaymentTransactionRepository;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use RuntimeException;
 
 class CreatePaymentTransaction implements ShouldQueue
 {
@@ -22,6 +24,7 @@ class CreatePaymentTransaction implements ShouldQueue
         private OrderRepository $orderRepository,
         private PaymentTransactionRepository $paymentTransactionRepository,
         private Dispatcher $events,
+        private ConfigRepository $config,
     ) {}
 
     public function handle(OrderCreated $event): void
@@ -40,7 +43,7 @@ class CreatePaymentTransaction implements ShouldQueue
 
         $paymentTransaction = $this->paymentTransactionRepository->create([
             'order_id' => $order->id,
-            'provider' => Provider::ECPAY->value,
+            'provider' => $this->resolveDefaultProvider()->value,
             'merchant_trade_no' => $this->makeMerchantTradeNo($order->number),
             'amount' => $order->total_amount,
             'currency' => 'TWD',
@@ -52,6 +55,17 @@ class CreatePaymentTransaction implements ShouldQueue
         ]);
 
         $this->events->dispatch(new PaymentInitiated($paymentTransaction->id));
+    }
+
+    private function resolveDefaultProvider(): Provider
+    {
+        $provider = Provider::tryFrom((int) $this->config->get('services.payment.default_provider'));
+
+        if (! $provider instanceof Provider) {
+            throw new RuntimeException('Default payment provider is not supported.');
+        }
+
+        return $provider;
     }
 
     private function makeMerchantTradeNo(string $orderNumber): string

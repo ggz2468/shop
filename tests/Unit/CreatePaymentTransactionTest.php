@@ -83,20 +83,21 @@ class CreatePaymentTransactionTest extends TestCase
     }
 
     /**
-     * OrderCreated: 付款方式應對應正確的金流 provider。
+     * OrderCreated: 應使用系統設定的預設金流 provider。
      */
-    public function test_handle_resolves_provider_from_payment_method(): void
+    public function test_handle_resolves_provider_from_default_payment_provider_config(): void
     {
         Event::fake([PaymentInitiated::class]);
+        config(['services.payment.default_provider' => Provider::ECPAY->value]);
 
         $cases = [
-            [PaymentMethod::CREDIT_CARD, Provider::ECPAY],
-            [PaymentMethod::ATM, Provider::ECPAY],
-            [PaymentMethod::CVS, Provider::ECPAY],
-            [PaymentMethod::BARCODE, Provider::ECPAY],
+            PaymentMethod::CREDIT_CARD,
+            PaymentMethod::ATM,
+            PaymentMethod::CVS,
+            PaymentMethod::BARCODE,
         ];
 
-        foreach ($cases as [$paymentMethod, $provider]) {
+        foreach ($cases as $paymentMethod) {
             $order = Order::factory()->create([
                 'payment_method' => $paymentMethod->value,
             ]);
@@ -105,7 +106,7 @@ class CreatePaymentTransactionTest extends TestCase
 
             $this->assertDatabaseHas('payment_transactions', [
                 'order_id' => $order->id,
-                'provider' => $provider->value,
+                'provider' => Provider::ECPAY->value,
                 'payment_method' => $paymentMethod->value,
             ]);
         }
@@ -129,6 +130,7 @@ class CreatePaymentTransactionTest extends TestCase
             new OrderRepository,
             new PaymentTransactionRepository,
             app('events'),
+            app('config'),
         );
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Contracts\PaymentGateway;
-use App\Gateways\Payments\EcpayPaymentGateway;
+use App\Gateways\Payments\PaymentGatewayManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -16,7 +16,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(PaymentGateway::class, EcpayPaymentGateway::class);
+        $this->app->bind(PaymentGateway::class, function (): PaymentGateway {
+            return $this->app->make(PaymentGatewayManager::class)
+                ->driver((int) config('services.payment.default_provider'));
+        });
     }
 
     /**

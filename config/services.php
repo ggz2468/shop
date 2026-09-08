@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\PaymentTransaction\Provider;
+use App\Gateways\Payments\EcpayPaymentGateway;
+
 return [
 
     /*
@@ -42,6 +45,14 @@ return [
     ],
 
     'frontend_url' => env('FRONTEND_URL', 'http://localhost'),
+
+    // 金流設定
+    'payment' => [
+        'default_provider' => (int) env('PAYMENT_DEFAULT_PROVIDER', Provider::ECPAY->value),
+        'gateways' => [
+            Provider::ECPAY->value => EcpayPaymentGateway::class,
+        ],
+    ],
 
     // 綠界金流
     'ecpay' => [
