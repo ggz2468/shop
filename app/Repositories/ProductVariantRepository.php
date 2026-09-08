@@ -8,10 +8,6 @@ class ProductVariantRepository extends Repository
 {
     /**
      * 更新產品規格的庫存數量
-     *
-     * @param  int  $productVariantId
-     * @param  int  $quantity
-     * @return int
      */
     public function updateStockQuantity(int $productVariantId, int $quantity): int
     {

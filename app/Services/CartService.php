@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Stores\CartStore;
 use App\Repositories\ProductVariantRepository;
+use App\Stores\CartStore;
 use Throwable;
 
 class CartService
